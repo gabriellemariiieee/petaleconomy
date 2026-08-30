@@ -1,5 +1,6 @@
 package io.petaleconomy.balance;
 
+import io.petaleconomy.capabilities.PetalCapabilities;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.capabilities.Capability;

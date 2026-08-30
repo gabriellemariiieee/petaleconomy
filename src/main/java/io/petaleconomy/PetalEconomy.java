@@ -1,6 +1,8 @@
 package io.petaleconomy;
 
 import com.mojang.logging.LogUtils;
+import io.petaleconomy.block.ModBlocks;
+import io.petaleconomy.commands.PetalEconomyCommands;
 import io.petaleconomy.events.PetalCapabilitiesEvents;
 import io.petaleconomy.item.ModCreativeModTabs;
 import io.petaleconomy.item.ModItems;
@@ -26,12 +28,13 @@ public class PetalEconomy {
         IEventBus modEventBus = context.getModEventBus();
 
         ModItems.register(modEventBus);
+        ModBlocks.register(modEventBus);
         ModCreativeModTabs.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 
         MinecraftForge.EVENT_BUS.register(PetalCapabilitiesEvents.class);
-
+        MinecraftForge.EVENT_BUS.register(PetalEconomyCommands.class);
 
 
         MinecraftForge.EVENT_BUS.register(this);
