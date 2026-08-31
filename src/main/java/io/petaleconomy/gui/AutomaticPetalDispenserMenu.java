@@ -13,15 +13,22 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
 public class AutomaticPetalDispenserMenu extends AbstractContainerMenu {
-    public final AutomaticPetalDispenser block;
-    private final Level level;
-    private final ContainerData data;
+    //public final AutomaticPetalDispenser block;
+    //private final Level level;
+    //private final ContainerData data;
 
-    public AutomaticPetalDispenserMenu(int pContainerId, Inventory inv, FriendlyByteBuf extraData) {
-        this (pContainerId, inv, inv.player.level().getBlockState(extraData.readBlockPos()), new SimpleContainerData(2));
+    public AutomaticPetalDispenserMenu(int pContainerId, Inventory inv)  {
+        super(ModMenuTypes.AUTOMATIC_PETAL_DISPENSER_MENU.get(), pContainerId);
+
+        addPlayerInventory(inv);
+        addPlayerHotbar(inv);
     }
 
-    public AutomaticPetalDispenserMenu(int pContainerId, Inventory inv, Block block, ContainerData data) {
+    public AutomaticPetalDispenserMenu(int pContainerId, Inventory inv, FriendlyByteBuf extraData) {
+        this (pContainerId, inv);
+    }
+
+    /*public AutomaticPetalDispenserMenu(int pContainerId, Inventory inv, Block block, ContainerData data) {
         super(, pContainerId);
         checkContainerSize(inv, 2);
         block = ((AutomaticPetalDispenser) block);
@@ -35,16 +42,16 @@ public class AutomaticPetalDispenserMenu extends AbstractContainerMenu {
         this.
 
         addDataSlots(data);
-    }
+    }*/
 
     @Override
     public ItemStack quickMoveStack(Player p_38941_, int p_38942_) {
-        return null;
+        return ItemStack.EMPTY;
     }
 
     @Override
     public boolean stillValid(Player p_38874_) {
-        return false;
+        return true;
     }
 
     private void addPlayerInventory(Inventory playerInventory) {

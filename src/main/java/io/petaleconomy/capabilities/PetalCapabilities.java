@@ -1,6 +1,6 @@
 package io.petaleconomy.capabilities;
 
-import io.petaleconomy.balance.PetalBalance;
+import io.petaleconomy.economy.PetalBalance;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;

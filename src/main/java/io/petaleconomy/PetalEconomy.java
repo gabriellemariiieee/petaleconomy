@@ -4,8 +4,11 @@ import com.mojang.logging.LogUtils;
 import io.petaleconomy.block.ModBlocks;
 import io.petaleconomy.commands.PetalEconomyCommands;
 import io.petaleconomy.events.PetalCapabilitiesEvents;
+import io.petaleconomy.gui.AutomaticPetalDispenserScreen;
+import io.petaleconomy.gui.ModMenuTypes;
 import io.petaleconomy.item.ModCreativeModTabs;
 import io.petaleconomy.item.ModItems;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -29,13 +32,13 @@ public class PetalEconomy {
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
         ModCreativeModTabs.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 
         MinecraftForge.EVENT_BUS.register(PetalCapabilitiesEvents.class);
         MinecraftForge.EVENT_BUS.register(PetalEconomyCommands.class);
-
 
         MinecraftForge.EVENT_BUS.register(this);
         modEventBus.addListener((this::addCreative));
@@ -58,7 +61,7 @@ public class PetalEconomy {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-
+            MenuScreens.register(ModMenuTypes.AUTOMATIC_PETAL_DISPENSER_MENU.get(), AutomaticPetalDispenserScreen::new);
         }
     }
 }

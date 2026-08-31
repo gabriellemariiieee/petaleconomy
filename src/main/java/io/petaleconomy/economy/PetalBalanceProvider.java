@@ -1,4 +1,4 @@
-package io.petaleconomy.balance;
+package io.petaleconomy.economy;
 
 import io.petaleconomy.capabilities.PetalCapabilities;
 import net.minecraft.core.Direction;
@@ -25,12 +25,18 @@ public class PetalBalanceProvider implements ICapabilityProvider, INBTSerializab
     @Override
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
-        tag.putInt("Balance", balance.getBalance());
+
+        if (balance.getAccountId() != null) {
+            tag.putUUID("AccountId", balance.getAccountId());
+        }
+
         return tag;
     }
 
     @Override
     public void deserializeNBT(CompoundTag tag) {
-        balance.setBalance(tag.getInt("Balance"));
+        if (tag.hasUUID("AccountId")) {
+            balance.setAccountId(tag.getUUID("AccountId"));
+        }
     }
 }

@@ -2,6 +2,8 @@ package io.petaleconomy.commands;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.petaleconomy.capabilities.PetalCapabilities;
+import io.petaleconomy.economy.PetalAccount;
+import io.petaleconomy.economy.PetalAccountManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -10,22 +12,31 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
+import java.awt.event.ComponentListener;
+
 public class PetalEconomyCommands {
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
         event.getDispatcher().register(
                 Commands.literal("getBalance")
-                        .executes(context -> {
-                            ServerPlayer player = context.getSource().getPlayerOrException();
+                        .then(Commands.argument("target", EntityArgument.player())
+                            .executes(context -> {
+                                ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "target");
+                                PetalAccountManager accountManger = PetalAccountManager.get(targetPlayer.serverLevel());
+                                PetalAccount account = accountManger.getAccountForPlayer(targetPlayer);
+                                CommandSourceStack source = context.getSource();
 
-                            player.getCapability(PetalCapabilities.PETAL_BALANCE).ifPresent(balance -> {
-                                player.sendSystemMessage(Component.literal("Balance: " + balance.getBalance()));
-                            });
+                                if (account == null) {
+                                    source.sendFailure(Component.literal("No Petal account found."));
+                                    return 0;
+                                }
+                                accountManger.deposit(account.getAccountID(), 100);
+                                targetPlayer.sendSystemMessage(Component.literal("Balance: " + account.getBalance()));
 
-                            return 1;
-                        })
+                                return 1;
+                        }))
         );
-        event.getDispatcher().register(
+        /*event.getDispatcher().register(
                 Commands.literal(("setBalance"))
                         .then(Commands.argument("target", EntityArgument.player())
                                 .then(Commands.argument("value", IntegerArgumentType.integer())
@@ -33,12 +44,13 @@ public class PetalEconomyCommands {
                                             ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "target");
                                             int targetValue = IntegerArgumentType.getInteger(context, "value");
                                             CommandSourceStack source = context.getSource();
+                                            PetalAccount account = PetalAccountManager.get(targetPlayer.serverLevel()).getAccountForPlayer(targetPlayer);
 
-                                            targetPlayer.getCapability(PetalCapabilities.PETAL_BALANCE).ifPresent(balance -> {
-                                                balance.setBalance(targetValue);
-                                                targetPlayer.sendSystemMessage(Component.literal("Balance: " + balance.getBalance()));
-                                            });
-
+                                            if (account == null) {
+                                                source.sendFailure(Component.literal("No Petal account found."));
+                                                return 0;
+                                            }
+                                            account.
                                             return 1;
                                         })
                                 )
@@ -81,6 +93,6 @@ public class PetalEconomyCommands {
                                         })
                                 )
                         )
-        );
+        );*/
     }
 }

@@ -1,10 +1,12 @@
 package io.petaleconomy.block;
 
+import io.petaleconomy.gui.AutomaticPetalDispenserMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -30,9 +32,21 @@ public class AutomaticPetalDispenser extends HorizontalDirectionalBlock {
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    public InteractionResult use(
+            BlockState state,
+            Level level,
+            BlockPos pos,
+            Player player,
+            InteractionHand hand,
+            BlockHitResult hit) {
+        System.out.println("BANK RIGHT CLICKED");
+
         if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.sendSystemMessage(Component.literal("Bank has been opened"));
+            serverPlayer.openMenu(new SimpleMenuProvider(
+                    (containerId, inventory, player1) ->
+                            new AutomaticPetalDispenserMenu(containerId, inventory),
+                    Component.literal("Petal Bank")
+            ));
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide());

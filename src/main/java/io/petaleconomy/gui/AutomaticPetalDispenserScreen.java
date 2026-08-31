@@ -1,29 +1,28 @@
 package io.petaleconomy.gui;
 
-import io.petaleconomy.PetalEconomy;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class AutomaticPetalDispenserScreen extends AbstractContainerScreen<AutomaticPetalDispenserMenu> {
+    public AutomaticPetalDispenserScreen(AutomaticPetalDispenserMenu menu, Inventory inv, Component title) {
+        super(menu, inv, title);
 
-    //private static final ResourceLocation TEXTURE = new ResourceLocation(PetalEconomy.MODID, "textures/gui/automatic_petal_dispenser_gui.png");
-
-    public AutomaticPetalDispenserScreen(AutomaticPetalDispenserMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
-        super(pMenu, pPlayerInventory, pTitle);
+        this.imageWidth = 176;
+        this.imageHeight = 166;
     }
 
     @Override
-    protected void init() {
-        super.init();
-        this.inventoryLabelY = 10000;
-        this.titleLabelY = 10000;
-    }
+    protected void renderBg (GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        //RenderSystem.setShaderTexture(0, TEXTURE);
+        int x = (width - imageWidth) / 2;
+        int y = (height - imageHeight) / 2;
 
-    @Override
-    protected void renderBg(GuiGraphics pGuiGraphiocs, float pPartialTick, int pMouseX, int pMouseY) {
-
+        guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xFFC6A6D8);
     }
 }
