@@ -2,9 +2,9 @@ package io.petaleconomy;
 
 import com.mojang.logging.LogUtils;
 import io.petaleconomy.block.ModBlocks;
+import io.petaleconomy.block.entities.ModBlockEntities;
 import io.petaleconomy.commands.PetalEconomyCommands;
 import io.petaleconomy.events.PetalCapabilitiesEvents;
-import io.petaleconomy.gui.AutomaticPetalDispenserScreen;
 import io.petaleconomy.gui.ModMenuTypes;
 import io.petaleconomy.item.ModCreativeModTabs;
 import io.petaleconomy.item.ModItems;
@@ -33,6 +33,7 @@ public class PetalEconomy {
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModMenuTypes.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
         ModCreativeModTabs.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
@@ -61,7 +62,7 @@ public class PetalEconomy {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            MenuScreens.register(ModMenuTypes.AUTOMATIC_PETAL_DISPENSER_MENU.get(), AutomaticPetalDispenserScreen::new);
+            //MenuScreens.register(ModMenuTypes.AUTOMATIC_PETAL_DISPENSER_MENU.get(), AutomaticPetalDispenserDepositScreen::new);
         }
     }
 }

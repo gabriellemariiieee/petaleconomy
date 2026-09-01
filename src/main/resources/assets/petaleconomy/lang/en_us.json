@@ -5,6 +5,9 @@
   "item.petaleconomy.twenty_petals_bill": "Twenty Petals",
   "item.petaleconomy.fifty_petals_bill": "Fifty Petals",
   "item.petaleconomy.one_hundred_petals_bill": "One Hundred Petals",
+  "item.petaleconomy.five_hundred_petals_bill": "Five Hundred Petals",
+  "item.petaleconomy.one_thousand_petals_bill": "One Thousand Petals",
+  "item.petaleconomy.ten_thousand_petals_bill": "Ten Thousand Petals",
   "block.petaleconomy.automatic_petal_dispenser": "APD",
   "creativetab.petal_economy_tab": "Petal Economy"
 }

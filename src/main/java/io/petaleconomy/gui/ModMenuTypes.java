@@ -13,9 +13,6 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, PetalEconomy.MODID);
 
-    public static final RegistryObject<MenuType<AutomaticPetalDispenserMenu>> AUTOMATIC_PETAL_DISPENSER_MENU =
-            registerMenuType("automatic_petal_dispenser_menu", AutomaticPetalDispenserMenu::new);
-
     private static <T extends AbstractContainerMenu>RegistryObject<MenuType<T>> registerMenuType(String name, IContainerFactory<T> factory) {
         return MENUS.register(name, () -> IForgeMenuType.create(factory));
     }

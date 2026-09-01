@@ -27,6 +27,10 @@ public class PetalAccount {
         return balance;
     }
 
+    public void setBalance(int value) {
+        balance = value;
+    }
+
     public void deposit(int amount) {
         if (amount < 0) {
             throw new IllegalArgumentException("Cannot deposit a negative amount.");

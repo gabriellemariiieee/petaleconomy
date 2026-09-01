@@ -16,6 +16,9 @@ public class ModItems {
     public static final RegistryObject<Item> TWENTY_PETALS_BILL = ITEMS.register("twenty_petals_bill", () -> new PetalBill(20));
     public static final RegistryObject<Item> FIFTY_PETALS_BILL = ITEMS.register("fifty_petals_bill", () -> new PetalBill(50));
     public static final RegistryObject<Item> ONE_HUNDRED_PETALS_BILL = ITEMS.register("one_hundred_petals_bill", () -> new PetalBill(100));
+    public static final RegistryObject<Item> FIVE_HUNDRED_PETALS_BILL = ITEMS.register("five_hundred_petals_bill", () -> new PetalBill(500));
+    public static final RegistryObject<Item> ONE_THOUSAND_PETALS_BILL = ITEMS.register("one_thousand_petals_bill", () -> new PetalBill(1000));
+    public static final RegistryObject<Item> TEN_THOUSAND_PETALS_BILL = ITEMS.register("ten_thousand_petals_bill", () -> new PetalBill(10000));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

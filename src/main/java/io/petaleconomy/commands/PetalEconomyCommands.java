@@ -30,13 +30,12 @@ public class PetalEconomyCommands {
                                     source.sendFailure(Component.literal("No Petal account found."));
                                     return 0;
                                 }
-                                accountManger.deposit(account.getAccountID(), 100);
                                 targetPlayer.sendSystemMessage(Component.literal("Balance: " + account.getBalance()));
 
                                 return 1;
                         }))
         );
-        /*event.getDispatcher().register(
+        event.getDispatcher().register(
                 Commands.literal(("setBalance"))
                         .then(Commands.argument("target", EntityArgument.player())
                                 .then(Commands.argument("value", IntegerArgumentType.integer())
@@ -44,13 +43,15 @@ public class PetalEconomyCommands {
                                             ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "target");
                                             int targetValue = IntegerArgumentType.getInteger(context, "value");
                                             CommandSourceStack source = context.getSource();
-                                            PetalAccount account = PetalAccountManager.get(targetPlayer.serverLevel()).getAccountForPlayer(targetPlayer);
+                                            PetalAccountManager accountManger = PetalAccountManager.get(targetPlayer.serverLevel());
+                                            PetalAccount account = accountManger.getAccountForPlayer(targetPlayer);
 
                                             if (account == null) {
                                                 source.sendFailure(Component.literal("No Petal account found."));
                                                 return 0;
                                             }
-                                            account.
+                                            accountManger.set(account.getAccountID(), targetValue);
+                                            targetPlayer.sendSystemMessage(Component.literal("New Balance: " + accountManger.getAccount(account.getAccountID())));
                                             return 1;
                                         })
                                 )
@@ -64,12 +65,15 @@ public class PetalEconomyCommands {
                                             ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "target");
                                             int targetValue = IntegerArgumentType.getInteger(context, "value");
                                             CommandSourceStack source = context.getSource();
+                                            PetalAccountManager accountManger = PetalAccountManager.get(targetPlayer.serverLevel());
+                                            PetalAccount account = accountManger.getAccountForPlayer(targetPlayer);
 
-                                            targetPlayer.getCapability(PetalCapabilities.PETAL_BALANCE).ifPresent(balance -> {
-                                                balance.addPetals(targetValue);
-                                                targetPlayer.sendSystemMessage(Component.literal("Balance: " + balance.getBalance()));
-                                            });
-
+                                            if (account == null) {
+                                                source.sendFailure(Component.literal("No Petal account found."));
+                                                return 0;
+                                            }
+                                            accountManger.deposit(account.getAccountID(), targetValue);
+                                            targetPlayer.sendSystemMessage(Component.literal("Added " + targetValue + " | New Balance: " + accountManger.getAccount(account.getAccountID())));
                                             return 1;
                                         })
                                 )
@@ -83,16 +87,19 @@ public class PetalEconomyCommands {
                                             ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "target");
                                             int targetValue = IntegerArgumentType.getInteger(context, "value");
                                             CommandSourceStack source = context.getSource();
+                                            PetalAccountManager accountManger = PetalAccountManager.get(targetPlayer.serverLevel());
+                                            PetalAccount account = accountManger.getAccountForPlayer(targetPlayer);
 
-                                            targetPlayer.getCapability(PetalCapabilities.PETAL_BALANCE).ifPresent(balance -> {
-                                                balance.removePetals(targetValue);
-                                                targetPlayer.sendSystemMessage(Component.literal("Balance: " + balance.getBalance()));
-                                            });
-
+                                            if (account == null) {
+                                                source.sendFailure(Component.literal("No Petal account found."));
+                                                return 0;
+                                            }
+                                            accountManger.withdraw(account.getAccountID(), targetValue);
+                                            targetPlayer.sendSystemMessage(Component.literal("Withdrew " + targetValue + " | New Balance: " + accountManger.getAccount(account.getAccountID())));
                                             return 1;
                                         })
                                 )
                         )
-        );*/
+        );
     }
 }

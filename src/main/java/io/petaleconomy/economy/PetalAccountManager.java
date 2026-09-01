@@ -122,4 +122,15 @@ public class PetalAccountManager extends SavedData {
         setDirty();
         return true;
     }
+
+    public void set(UUID accountId, int amount) {
+        PetalAccount account = getAccount(accountId);
+
+        if (account == null) {
+            return;
+        }
+
+        account.setBalance(amount);
+        setDirty();
+    }
 }
