@@ -4,8 +4,8 @@ import io.petaleconomy.PetalEconomy;
 import io.petaleconomy.economy.PetalAccount;
 import io.petaleconomy.economy.PetalAccountManager;
 import io.petaleconomy.economy.PetalBalance;
-import io.petaleconomy.economy.PetalBalanceProvider;
 import io.petaleconomy.capabilities.PetalCapabilities;
+import io.petaleconomy.economy.PetalBalanceProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -37,7 +37,7 @@ public class PetalCapabilitiesEvents {
         );
 
         if (petalBalance.getAccountId() == null) {
-            PetalAccount account = PetalAccountManager.get(player.serverLevel()).createAccount();
+            PetalAccount account = PetalAccountManager.get(player.serverLevel()).createAccount(player.getUUID());
 
             petalBalance.setAccountId(account.getAccountID());
         }

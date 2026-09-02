@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 
+import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,9 +30,20 @@ public class PetalAccountManager extends SavedData {
             CompoundTag accountData = (CompoundTag) accountTag;
 
             UUID accountId = accountData.getUUID("AccountId");
+            UUID accountOwner = accountData.getUUID("Owner");
             int balance = accountData.getInt("Balance");
 
-            PetalAccount account = new PetalAccount(accountId, balance);
+            PetalAccount account = new PetalAccount(accountId, accountOwner, balance);
+
+            ListTag authorizedUsers = accountData.getList("Authorized Users", Tag.TAG_COMPOUND);
+            for (Tag authorizedTag : authorizedUsers) {
+                CompoundTag authorizedData = (CompoundTag) authorizedTag;
+                UUID authorizedUser = authorizedData.getUUID("UUID");
+                account.addAuthorizedUser(authorizedUser);
+            }
+
+            String accountName = accountData.getString("Name");
+            account.setAccountName(accountName);
 
             manager.accounts.put(accountId, account);
         }
@@ -47,7 +59,18 @@ public class PetalAccountManager extends SavedData {
             CompoundTag accountData = new CompoundTag();
 
             accountData.putUUID("AccountId", account.getAccountID());
+            accountData.putUUID("Owner", account.getOwner());
             accountData.putInt("Balance", account.getBalance());
+            accountData.putString("Name", account.getAccountName());
+
+            ListTag authorizedUsers = new ListTag();
+            for (UUID playerUUID : account.getAuthorizedUsers()) {
+                CompoundTag userData = new CompoundTag();
+                userData.putUUID("UUID", playerUUID);
+                authorizedUsers.add(userData);
+            }
+
+            accountData.put("Authorized Users", authorizedUsers);
 
             accountList.add(accountData);
         }
@@ -57,8 +80,8 @@ public class PetalAccountManager extends SavedData {
         return tag;
     }
 
-    public PetalAccount createAccount() {
-        PetalAccount account = new PetalAccount();
+    public PetalAccount createAccount(UUID ownerUUID) {
+        PetalAccount account = new PetalAccount(ownerUUID);
 
         accounts.put(account.getAccountID(), account);
 
@@ -97,6 +120,59 @@ public class PetalAccountManager extends SavedData {
         return getAccount(acountId);
     }
 
+    public void setAccountName(UUID acccountId, String newName) {
+        PetalAccount account = getAccount(acccountId);
+        account.setAccountName(newName);
+
+        setDirty();
+    }
+
+    public boolean addAuthorizedUser(UUID accountId, UUID playerUUID) {
+        PetalAccount account = getAccount(accountId);
+
+        if(account == null) {
+            return false;
+        }
+
+        account.addAuthorizedUser(playerUUID);
+
+        setDirty();
+        return true;
+    }
+
+    public boolean removeAuthorizedUser(UUID accountId, UUID playerUUID) {
+        PetalAccount account = getAccount(accountId);
+
+        if(account == null) {
+            return false;
+        }
+
+        account.removeAuthorizedUser(playerUUID);
+
+        setDirty();
+        return true;
+    }
+
+    public boolean isAccountOwner(UUID accountID, UUID playerUUID) {
+        PetalAccount account = getAccount(accountID);
+
+        if (account.getOwner() == playerUUID) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isAuthorizedUser(UUID accountID, UUID playerUUID) {
+        PetalAccount account = getAccount(accountID);
+
+        if (account.hasAccess(playerUUID)) {
+            return true;
+        }
+
+        return false;
+    }
+
     public void deposit(UUID accountId, int amount) {
         PetalAccount account = getAccount(accountId);
 
@@ -123,7 +199,7 @@ public class PetalAccountManager extends SavedData {
         return true;
     }
 
-    public void set(UUID accountId, int amount) {
+    public void setBalance(UUID accountId, int amount) {
         PetalAccount account = getAccount(accountId);
 
         if (account == null) {

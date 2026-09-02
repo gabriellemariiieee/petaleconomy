@@ -14,7 +14,7 @@ public class ModCreativeModTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, PetalEconomy.MODID);
 
     public static final RegistryObject<CreativeModeTab> PETAL_ECONOMY_TAB = CREATIVE_MODE_TABS.register("petal_economy_tab",
-            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.ONE_HUNDRED_PETALS_BILL.get()))
+            () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.TEN_THOUSAND_PETALS_BILL.get()))
                     .title(Component.translatable("creativetab.petal_economy_tab"))
                     .displayItems((pParameters, pOutput) -> {
                         pOutput.accept(ModItems.ONE_PETAL_BILL.get());
