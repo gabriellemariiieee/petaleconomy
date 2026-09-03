@@ -26,6 +26,7 @@ public class ModCreativeModTabs {
                         pOutput.accept(ModItems.FIVE_HUNDRED_PETALS_BILL.get());
                         pOutput.accept(ModItems.ONE_THOUSAND_PETALS_BILL.get());
                         pOutput.accept(ModItems.TEN_THOUSAND_PETALS_BILL.get());
+                        pOutput.accept(ModItems.PETAL_CARD.get());
                         pOutput.accept(ModBlocks.AUTOMATIC_PETAL_DISPENSER.get());
                     }).build());
 

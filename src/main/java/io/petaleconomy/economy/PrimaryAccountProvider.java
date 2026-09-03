@@ -1,6 +1,7 @@
 package io.petaleconomy.economy;
 
 import io.petaleconomy.capabilities.PetalCapabilities;
+import io.petaleconomy.util.Constants;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.capabilities.Capability;
@@ -8,15 +9,15 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class PetalBalanceProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
+public class PrimaryAccountProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
 
-    private final PetalBalance balance = new PetalBalance();
+    private final PrimaryPetalAccount primaryAccount = new PrimaryPetalAccount();
 
     @Override
     public <T>LazyOptional<T> getCapability(Capability<T> capability, Direction side) {
 
-        if (capability == PetalCapabilities.PETAL_BALANCE) {
-            return LazyOptional.of(() -> balance).cast();
+        if (capability == PetalCapabilities.PRIMARY_PETAL_ACCOUNT) {
+            return LazyOptional.of(() -> primaryAccount).cast();
         }
 
         return LazyOptional.empty();
@@ -26,8 +27,8 @@ public class PetalBalanceProvider implements ICapabilityProvider, INBTSerializab
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
 
-        if (balance.getAccountId() != null) {
-            tag.putUUID("AccountId", balance.getAccountId());
+        if (primaryAccount.getAccountId() != null) {
+            tag.putUUID(Constants.ACCOUNT_ID, primaryAccount.getAccountId());
         }
 
         return tag;
@@ -35,8 +36,8 @@ public class PetalBalanceProvider implements ICapabilityProvider, INBTSerializab
 
     @Override
     public void deserializeNBT(CompoundTag tag) {
-        if (tag.hasUUID("AccountId")) {
-            balance.setAccountId(tag.getUUID("AccountId"));
+        if (tag.hasUUID(Constants.ACCOUNT_ID)) {
+            primaryAccount.setAccountId(tag.getUUID(Constants.ACCOUNT_ID));
         }
     }
 }

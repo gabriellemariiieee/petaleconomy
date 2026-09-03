@@ -2,12 +2,14 @@ package io.petaleconomy.block.entities;
 
 import io.petaleconomy.economy.PetalAccount;
 import io.petaleconomy.economy.PetalAccountManager;
+import io.petaleconomy.gui.APDMainMenu;
 import io.petaleconomy.item.PetalBill;
 import io.petaleconomy.util.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
@@ -155,7 +157,7 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
 
     public int getAccountBalance(ServerPlayer player) {
         PetalAccountManager manager = PetalAccountManager.get(player.serverLevel());
-        PetalAccount account = manager.getAccountForPlayer(player);
+        PetalAccount account = manager.getUsableAccount(player);
 
         if (account == null) {
             return 0;
@@ -172,7 +174,7 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
         }
 
         PetalAccountManager manager = PetalAccountManager.get(player.serverLevel());
-        PetalAccount account = manager.getAccountForPlayer(player);
+        PetalAccount account = manager.getUsableAccount(player);
 
         if (account == null) {
             return false;
@@ -247,6 +249,12 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory inv, Player player) {
-        return null;
+        PetalAccountManager manager = PetalAccountManager.get((ServerLevel) player.level());
+        PetalAccount account = manager.getUsableAccount((ServerPlayer) player);
+        if (account == null) {
+            //return CreateAccountMenu
+        }
+
+        return new APDMainMenu(containerId, inv, this, (IItemHandler)itemHandler, this.data); //change to APDMainMenu
     }
 }

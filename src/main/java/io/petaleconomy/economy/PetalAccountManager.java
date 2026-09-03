@@ -1,15 +1,17 @@
 package io.petaleconomy.economy;
 
 import io.petaleconomy.capabilities.PetalCapabilities;
+import io.petaleconomy.item.ModItems;
+import io.petaleconomy.util.Constants;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 
-import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -21,65 +23,7 @@ public class PetalAccountManager extends SavedData {
 
     }
 
-    public static PetalAccountManager load (CompoundTag tag) {
-        PetalAccountManager manager = new PetalAccountManager();
-
-        ListTag accountList = tag.getList("Accounts", Tag.TAG_COMPOUND);
-
-        for (Tag accountTag : accountList) {
-            CompoundTag accountData = (CompoundTag) accountTag;
-
-            UUID accountId = accountData.getUUID("AccountId");
-            UUID accountOwner = accountData.getUUID("Owner");
-            int balance = accountData.getInt("Balance");
-
-            PetalAccount account = new PetalAccount(accountId, accountOwner, balance);
-
-            ListTag authorizedUsers = accountData.getList("Authorized Users", Tag.TAG_COMPOUND);
-            for (Tag authorizedTag : authorizedUsers) {
-                CompoundTag authorizedData = (CompoundTag) authorizedTag;
-                UUID authorizedUser = authorizedData.getUUID("UUID");
-                account.addAuthorizedUser(authorizedUser);
-            }
-
-            String accountName = accountData.getString("Name");
-            account.setAccountName(accountName);
-
-            manager.accounts.put(accountId, account);
-        }
-
-        return manager;
-    }
-
-    @Override
-    public CompoundTag save(CompoundTag tag) {
-        ListTag accountList = new ListTag();
-
-        for (PetalAccount account : accounts.values()) {
-            CompoundTag accountData = new CompoundTag();
-
-            accountData.putUUID("AccountId", account.getAccountID());
-            accountData.putUUID("Owner", account.getOwner());
-            accountData.putInt("Balance", account.getBalance());
-            accountData.putString("Name", account.getAccountName());
-
-            ListTag authorizedUsers = new ListTag();
-            for (UUID playerUUID : account.getAuthorizedUsers()) {
-                CompoundTag userData = new CompoundTag();
-                userData.putUUID("UUID", playerUUID);
-                authorizedUsers.add(userData);
-            }
-
-            accountData.put("Authorized Users", authorizedUsers);
-
-            accountList.add(accountData);
-        }
-
-        tag.put("Accounts", accountList);
-
-        return tag;
-    }
-
+    //account creation
     public PetalAccount createAccount(UUID ownerUUID) {
         PetalAccount account = new PetalAccount(ownerUUID);
 
@@ -90,6 +34,7 @@ public class PetalAccountManager extends SavedData {
         return account;
     }
 
+    //account retrieval
     public PetalAccount getAccount(UUID accountId) {
         return accounts.get(accountId);
     }
@@ -98,28 +43,48 @@ public class PetalAccountManager extends SavedData {
         return accounts.containsKey(accountId);
     }
 
-    public static PetalAccountManager get(ServerLevel level) {
-        ServerLevel overworld = level.getServer().getLevel(Level.OVERWORLD);
-
-        return overworld.getDataStorage().computeIfAbsent(
-                PetalAccountManager::load,
-                PetalAccountManager::new,
-                "petal_accounts");
-    }
-
-    public PetalAccount getAccountForPlayer(ServerPlayer player) {
-        PetalBalance petalBalance = player.getCapability(PetalCapabilities.PETAL_BALANCE).orElseThrow(() ->
+    public PetalAccount getUsableAccount(ServerPlayer player) {
+        /*PrimaryPetalAccount petalBalance = player.getCapability(PetalCapabilities.PETAL_BALANCE).orElseThrow(() ->
                 new IllegalStateException("Petal Balance capability not found"));
 
         UUID acountId = petalBalance.getAccountId();
 
         if (acountId == null) {
             return null;
+        } */
+
+        //checks for usable Card
+        for (ItemStack item : player.getInventory().items) {
+            if (getAccountForCard(item, player) != null) {
+                    return getAccountForCard(item, player);
+            }
         }
 
-        return getAccount(acountId);
+        //checks for Primary Account
+        PrimaryPetalAccount primaryAccount = player.getCapability(PetalCapabilities.PRIMARY_PETAL_ACCOUNT).orElseThrow(() ->
+                new IllegalStateException("Primary Card not found"));
+
+        UUID accountID = primaryAccount.getAccountId();
+        if (!(accountID == null) && hasAccount(accountID)) {
+            return getAccount(accountID);
+        }
+
+        return null;
     }
 
+    public PetalAccount getAccountForCard(ItemStack card, ServerPlayer player) {
+        if (!card.is(ModItems.PETAL_CARD.get())) {
+            return null;
+        }
+
+        if (!isCardValid(card, player)) {
+            return null;
+        }
+
+        return getAccount(ModItems.PETAL_CARD.get().getAccountId(card));
+    }
+
+    //account modification
     public void setAccountName(UUID acccountId, String newName) {
         PetalAccount account = getAccount(acccountId);
         account.setAccountName(newName);
@@ -127,6 +92,44 @@ public class PetalAccountManager extends SavedData {
         setDirty();
     }
 
+    public void deposit(UUID accountId, int amount) {
+        PetalAccount account = getAccount(accountId);
+
+        if (account == null) {
+            return;
+        }
+
+        account.deposit(amount);
+        setDirty();
+    }
+
+    public boolean withdraw(UUID accountId, int amount) {
+        PetalAccount account = getAccount(accountId);
+
+        if (account == null) {
+            return false;
+        }
+
+        if (!account.withdraw(amount)) {
+            return false;
+        }
+
+        setDirty();
+        return true;
+    }
+
+    public void setBalance(UUID accountId, int amount) {
+        PetalAccount account = getAccount(accountId);
+
+        if (account == null) {
+            return;
+        }
+
+        account.setBalance(amount);
+        setDirty();
+    }
+
+    //access management
     public boolean addAuthorizedUser(UUID accountId, UUID playerUUID) {
         PetalAccount account = getAccount(accountId);
 
@@ -173,40 +176,89 @@ public class PetalAccountManager extends SavedData {
         return false;
     }
 
-    public void deposit(UUID accountId, int amount) {
-        PetalAccount account = getAccount(accountId);
+    //card management
+    public boolean isCardValid(ItemStack stack, ServerPlayer player) {
+        UUID accountId = ModItems.PETAL_CARD.get().getAccountId(stack);
 
-        if (account == null) {
-            return;
-        }
-
-        account.deposit(amount);
-        setDirty();
-    }
-
-    public boolean withdraw(UUID accountId, int amount) {
-        PetalAccount account = getAccount(accountId);
-
-        if (account == null) {
+        if (accountId == null || !hasAccount(accountId)) {
             return false;
         }
 
-        if (!account.withdraw(amount)) {
+        PetalAccount account = getAccount(accountId);
+
+        if (account == null || !hasAccount(accountId)) {
             return false;
         }
 
-        setDirty();
-        return true;
+        return isAuthorizedUser(accountId, player.getUUID());
     }
 
-    public void setBalance(UUID accountId, int amount) {
-        PetalAccount account = getAccount(accountId);
+    //persistence
+    public static PetalAccountManager load (CompoundTag tag) {
+        PetalAccountManager manager = new PetalAccountManager();
 
-        if (account == null) {
-            return;
+        ListTag accountList = tag.getList("Accounts", Tag.TAG_COMPOUND);
+
+        for (Tag accountTag : accountList) {
+            CompoundTag accountData = (CompoundTag) accountTag;
+
+            UUID accountId = accountData.getUUID(Constants.ACCOUNT_ID);
+            UUID accountOwner = accountData.getUUID(Constants.ACCOUNT_OWNER);
+            int balance = accountData.getInt(Constants.ACCOUNT_BALANCE);
+
+            PetalAccount account = new PetalAccount(accountId, accountOwner, balance);
+
+            ListTag authorizedUsers = accountData.getList("Authorized Users", Tag.TAG_COMPOUND);
+            for (Tag authorizedTag : authorizedUsers) {
+                CompoundTag authorizedData = (CompoundTag) authorizedTag;
+                UUID authorizedUser = authorizedData.getUUID(Constants.PLAYERUUID);
+                account.addAuthorizedUser(authorizedUser);
+            }
+
+            String accountName = accountData.getString(Constants.ACCOUNT_NAME);
+            account.setAccountName(accountName);
+
+            manager.accounts.put(accountId, account);
         }
 
-        account.setBalance(amount);
-        setDirty();
+        return manager;
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag) {
+        ListTag accountList = new ListTag();
+
+        for (PetalAccount account : accounts.values()) {
+            CompoundTag accountData = new CompoundTag();
+
+            accountData.putUUID(Constants.ACCOUNT_ID, account.getAccountID());
+            accountData.putUUID(Constants.ACCOUNT_OWNER, account.getOwner());
+            accountData.putInt(Constants.ACCOUNT_BALANCE, account.getBalance());
+            accountData.putString(Constants.ACCOUNT_NAME, account.getAccountName());
+
+            ListTag authorizedUsers = new ListTag();
+            for (UUID playerUUID : account.getAuthorizedUsers()) {
+                CompoundTag userData = new CompoundTag();
+                userData.putUUID(Constants.PLAYERUUID, playerUUID);
+                authorizedUsers.add(userData);
+            }
+
+            accountData.put("Authorized Users", authorizedUsers);
+
+            accountList.add(accountData);
+        }
+
+        tag.put("Accounts", accountList);
+
+        return tag;
+    }
+
+    public static PetalAccountManager get(ServerLevel level) {
+        ServerLevel overworld = level.getServer().getLevel(Level.OVERWORLD);
+
+        return overworld.getDataStorage().computeIfAbsent(
+                PetalAccountManager::load,
+                PetalAccountManager::new,
+                "petal_accounts");
     }
 }

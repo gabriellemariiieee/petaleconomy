@@ -1,13 +1,13 @@
 package io.petaleconomy.capabilities;
 
-import io.petaleconomy.economy.PetalBalance;
+import io.petaleconomy.economy.PrimaryPetalAccount;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 
 public class PetalCapabilities {
 
-    public static final Capability<PetalBalance> PETAL_BALANCE = CapabilityManager.get(new CapabilityToken<>() {});
+    public static final Capability<PrimaryPetalAccount> PRIMARY_PETAL_ACCOUNT = CapabilityManager.get(new CapabilityToken<>() {});
 
     private PetalCapabilities() {}
 }

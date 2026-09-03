@@ -8,8 +8,10 @@ import io.petaleconomy.events.PetalCapabilitiesEvents;
 import io.petaleconomy.gui.ModMenuTypes;
 import io.petaleconomy.item.ModCreativeModTabs;
 import io.petaleconomy.item.ModItems;
+import io.petaleconomy.item.PetalCard;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -63,6 +65,20 @@ public class PetalEconomy {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             //MenuScreens.register(ModMenuTypes.AUTOMATIC_PETAL_DISPENSER_MENU.get(), AutomaticPetalDispenserDepositScreen::new);
+        }
+
+        @SubscribeEvent
+        public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
+            event.register(
+                    (stack, tintIndex) -> {
+                        if (tintIndex == 1) {
+                            return ModItems.PETAL_CARD.get().getFlowerColor(stack);
+                        }
+
+                        return 0xFFFFFF;
+                    },
+                    ModItems.PETAL_CARD.get()
+            );
         }
     }
 }

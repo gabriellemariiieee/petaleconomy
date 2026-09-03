@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,6 +79,7 @@ public class AutomaticPetalDispenser extends HorizontalDirectionalBlock implemen
 
         if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
+            blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER)
             if (blockEntity instanceof AutomaticPetalDispenserBlockEntity) {
                 NetworkHooks.openScreen(
                         serverPlayer, (AutomaticPetalDispenserBlockEntity)blockEntity, buf -> buf.writeBlockPos(pos)

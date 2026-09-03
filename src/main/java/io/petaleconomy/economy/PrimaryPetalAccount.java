@@ -2,10 +2,12 @@ package io.petaleconomy.economy;
 
 import java.util.UUID;
 
-public class PetalBalance {
+public class PrimaryPetalAccount {
     private UUID accountId;
 
-    public PetalBalance() { }
+    public PrimaryPetalAccount() {
+        this.accountId = null;
+    }
 
     public UUID getAccountId() {
         return accountId;
@@ -13,5 +15,9 @@ public class PetalBalance {
 
     public void setAccountId(UUID accountId) {
         this.accountId = accountId;
+    }
+
+    public boolean hasAccount() {
+        return this.accountId == null;
     }
 }

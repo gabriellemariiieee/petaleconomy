@@ -20,7 +20,7 @@ public class PetalEconomyCommands {
                             .executes(context -> {
                                 ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "target");
                                 PetalAccountManager accountManager = PetalAccountManager.get(targetPlayer.serverLevel());
-                                PetalAccount account = accountManager.getAccountForPlayer(targetPlayer);
+                                PetalAccount account = accountManager.getUsableAccount(targetPlayer);
                                 CommandSourceStack source = context.getSource();
 
                                 if (account == null) {
@@ -41,7 +41,7 @@ public class PetalEconomyCommands {
                                             int targetValue = IntegerArgumentType.getInteger(context, "value");
                                             CommandSourceStack source = context.getSource();
                                             PetalAccountManager accountManger = PetalAccountManager.get(targetPlayer.serverLevel());
-                                            PetalAccount account = accountManger.getAccountForPlayer(targetPlayer);
+                                            PetalAccount account = accountManger.getUsableAccount(targetPlayer);
 
                                             if (account == null) {
                                                 source.sendFailure(Component.literal("No Petal account found."));
@@ -63,7 +63,7 @@ public class PetalEconomyCommands {
                                             int targetValue = IntegerArgumentType.getInteger(context, "value");
                                             CommandSourceStack source = context.getSource();
                                             PetalAccountManager accountManger = PetalAccountManager.get(targetPlayer.serverLevel());
-                                            PetalAccount account = accountManger.getAccountForPlayer(targetPlayer);
+                                            PetalAccount account = accountManger.getUsableAccount(targetPlayer);
 
                                             if (account == null) {
                                                 source.sendFailure(Component.literal("No Petal account found."));
@@ -85,7 +85,7 @@ public class PetalEconomyCommands {
                                             int targetValue = IntegerArgumentType.getInteger(context, "value");
                                             CommandSourceStack source = context.getSource();
                                             PetalAccountManager accountManger = PetalAccountManager.get(targetPlayer.serverLevel());
-                                            PetalAccount account = accountManger.getAccountForPlayer(targetPlayer);
+                                            PetalAccount account = accountManger.getUsableAccount(targetPlayer);
 
                                             if (account == null) {
                                                 source.sendFailure(Component.literal("No Petal account found."));

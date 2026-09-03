@@ -13,6 +13,9 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, PetalEconomy.MODID);
 
+    public static final RegistryObject<MenuType<APDMainMenu>> APD_MAIN_MENU =
+            registerMenuType("apd_main_menu", APDMainMenu::new);
+
     private static <T extends AbstractContainerMenu>RegistryObject<MenuType<T>> registerMenuType(String name, IContainerFactory<T> factory) {
         return MENUS.register(name, () -> IForgeMenuType.create(factory));
     }
