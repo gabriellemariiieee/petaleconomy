@@ -15,7 +15,8 @@ public class ModTags {
     }*/
 
     public static class Items {
-        public static final TagKey<Item> PETAL_BILLS = tag("petal_bills");
+        public static final TagKey<Item> PETAL_BILLS = tag("petal_bill");
+        public static final TagKey<Item> PETAL_CARDS = tag("petal_card");
 
         private static TagKey<Item> tag(String name) {
             return ItemTags.create(ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, name));

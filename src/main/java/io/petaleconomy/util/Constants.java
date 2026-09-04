@@ -21,6 +21,16 @@ public final class Constants {
     public static final int[] DENOMINATIONS = {
             1, 5, 10, 20, 50, 100, 500, 1000, 10000
     };
-    public static final int CARD_SLOT_X = 8;
-    public static final int CARD_SLOT_Y = 17;
+    public static final int CARD_SLOT_X = 152;
+    public static final int CARD_SLOT_Y = 22;
+
+    public static final int HOTBAR_SLOT_COUNT = 9;
+    public static final int PLAYER_INVENTORY_ROW_COUNT = 3;
+    public static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
+    public static final int PLAYER_INVENTORY_SLOT_COUNT = PLAYER_INVENTORY_COLUMN_COUNT * PLAYER_INVENTORY_ROW_COUNT;
+    public static final int VANILLA_SLOT_COUNT = HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_SLOT_COUNT;
+    public static final int VANILLA_FIRST_SLOT_INDEX = 0;
+    public static final int BE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
+    public static final int BE_INVENTORY_SLOT_COUNT = 11;
+
 }

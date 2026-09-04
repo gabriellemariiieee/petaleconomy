@@ -20,7 +20,7 @@ public class PetalAccount {
         this.owner = owner;
         this.balance = balance;
 
-        this.name = "Primary Account";
+        this.name = "Primary";
         this.authorizedUsers.add(owner);
     }
 

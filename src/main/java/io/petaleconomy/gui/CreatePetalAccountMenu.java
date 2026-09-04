@@ -2,41 +2,49 @@ package io.petaleconomy.gui;
 
 import io.petaleconomy.block.ModBlocks;
 import io.petaleconomy.block.entities.AutomaticPetalDispenserBlockEntity;
-import io.petaleconomy.economy.PetalAccount;
-import io.petaleconomy.util.Constants;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.*;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
 
-import java.util.UUID;
-
-public class APDMainMenu extends AbstractPetalMenu {
+public class CreatePetalAccountMenu extends AbstractPetalMenu {
     public final AutomaticPetalDispenserBlockEntity blockEntity;
     private final Level level;
+    private boolean primaryAccount = false;
 
-    public APDMainMenu(int pContainerId, Inventory inv, FriendlyByteBuf extraData) {
+    public CreatePetalAccountMenu(int pContainerId, Inventory inv, FriendlyByteBuf extraData) {
         this(pContainerId, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 
-    public APDMainMenu(int pContainerId, Inventory inv, BlockEntity entity) {
-        super(ModMenuTypes.APD_MAIN_MENU.get(), pContainerId, inv.player);
-        checkContainerSize(inv, 11);
+    public CreatePetalAccountMenu(int pContainerId, Inventory inv, BlockEntity entity) {
+        super(ModMenuTypes.CREATE_PETAL_ACCOUNT_MENU.get(), pContainerId, inv.player);
         blockEntity = ((AutomaticPetalDispenserBlockEntity) entity);
         this.level = inv.player.level();
 
         blockEntity.setMenu(this);
         addPlayerInventory(inv);
-        addCardSlot(blockEntity.getItemHandler());
+        addCardSlot(blockEntity.getItemHandler(), 26, 52);
+        addInputSlot(80);
+        this.primaryAccount = blockEntity.isPrimaryAccount;
+    }
 
-        updateCurrentAccount();
+    protected void createAccount() {
+        //creates account and bounds card if present
+
+    }
+
+    protected void setAccountName() {
+        //takes the account name from input and sends it to create account
+    }
+
+    protected void depositStartingBalance() {
+
+    }
+
+    protected void ejectStartingBalance() {
+
     }
 
     @Override

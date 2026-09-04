@@ -1,34 +1,66 @@
 package io.petaleconomy.gui;
 
+import io.petaleconomy.block.ModBlocks;
 import io.petaleconomy.economy.PetalAccount;
 import io.petaleconomy.economy.PetalAccountManager;
+import io.petaleconomy.network.PetalNetwork;
+import io.petaleconomy.network.SyncAccountNamePacket;
 import io.petaleconomy.util.Constants;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
+import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 
 public abstract class AbstractPetalMenu extends AbstractContainerMenu {
 
-    protected final ServerPlayer player;
-    protected final IItemHandler itemHandler;
+    protected final Player player;
+    protected IItemHandler itemHandler;
+    protected PetalAccount currentAccount;
+    protected int accountBalance;
+    private String currentAccountName = "";
+    protected ContainerData data;
 
-    protected AbstractPetalMenu(@Nullable MenuType<?> menuType, int containerId, ServerPlayer player, IItemHandler iItemHandler) {
+    private String lastSyncedAccountName = null;
 
+    protected AbstractPetalMenu(@Nullable MenuType<?> menuType, int containerId, Player player) {
         super(menuType, containerId);
         this.player = player;
-        this.itemHandler = iItemHandler;
+
+        this.data = new ContainerData() {
+            @Override
+            public int get(int pIndex) {
+                if (pIndex == 0) {
+                    return accountBalance;
+                }
+
+                return 0;
+            }
+
+            @Override
+            public void set(int pIndex, int value) {
+                if (pIndex == 0) {
+                    accountBalance = value;
+                }
+            }
+
+            @Override
+            public int getCount() {
+                return 1;
+            }
+        };
+
+        addDataSlots(data);
     }
 
     //inventory helper method
-    public void addPlayerInventory(Inventory playerInventory) {
+    protected void addPlayerInventory(Inventory playerInventory) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 104 + row * 18));
@@ -36,13 +68,57 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         }
 
         //Hotbar
-        for(int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, 8 * + col * 18, 162));
+        for(int c = 0; c < 9; c++) {
+            this.addSlot(new Slot(playerInventory, c, 8  + c * 18, 162));
         }
     }
 
-    public void addCardSlot() {
+    protected void addCardSlot(IItemHandler itemHandler) {
+        this.itemHandler = itemHandler;
         this.addSlot(new SlotItemHandler(itemHandler, Constants.CARD_SLOT, Constants.CARD_SLOT_X, Constants.CARD_SLOT_Y));
+    }
+
+    //for create account menu
+    protected void addCardSlot(IItemHandler itemHandler, int x, int y) {
+        this.itemHandler = itemHandler;
+        this.addSlot(new SlotItemHandler(itemHandler, Constants.CARD_SLOT, x, y));
+    }
+
+    protected void addInputSlot(int x) {
+        this.addSlot(new SlotItemHandler(itemHandler, Constants.INPUT_SLOT, x, 52));
+    }
+
+    // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
+    @Override
+    public ItemStack quickMoveStack(Player pPlayer, int index) {
+        Slot sourceSlot = slots.get(index);
+        if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;
+        ItemStack sourceStack = sourceSlot.getItem();
+        ItemStack copyOfSourceStack = sourceStack.copy();
+
+        //check if the slot clicked is a vanilla container slot
+        if (index < Constants.BE_INVENTORY_FIRST_SLOT_INDEX) {
+            //this is a vanilla container slot so merge into block entity inventory
+            if(!moveItemStackTo(sourceStack, Constants.BE_INVENTORY_FIRST_SLOT_INDEX, Constants.BE_INVENTORY_FIRST_SLOT_INDEX + 2, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else if (index < Constants.BE_INVENTORY_FIRST_SLOT_INDEX + Constants.BE_INVENTORY_SLOT_COUNT) {
+            //this is a block entity inventory slot so merge the stack into vanilla container inventory
+            if(!moveItemStackTo(sourceStack, Constants.VANILLA_FIRST_SLOT_INDEX, Constants.BE_INVENTORY_FIRST_SLOT_INDEX, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else {
+            System.out.println("Invalid slotIndex: " + index);
+        }
+
+        //if stack size == 0 (the entire stack was moved) set slot contents to null
+        if(sourceStack.getCount() == 0) {
+            sourceSlot.set(ItemStack.EMPTY);
+        } else {
+            sourceSlot.setChanged();
+        }
+        sourceSlot.onTake(pPlayer, sourceStack);
+        return copyOfSourceStack;
     }
 
     protected ItemStack getCurrentCard() {
@@ -50,14 +126,64 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
     }
 
     protected PetalAccount getCurrentAccount() {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return null;
+        }
         ItemStack card = getCurrentCard();
 
-        PetalAccountManager manager = PetalAccountManager.get(player.serverLevel());
+        PetalAccountManager manager = PetalAccountManager.get(serverPlayer.serverLevel());
 
         if(!card.isEmpty()) {
-            return manager.getAccountForCard(card, player);
+            return currentAccount = manager.getAccountForCard(card, serverPlayer);
+        } else {
+            return currentAccount = manager.getUsableAccount(serverPlayer);
         }
+    }
 
-        return manager.getUsableAccount(player);
+    public void updateCurrentAccount() {
+        currentAccount = getCurrentAccount();
+        accountBalance = currentAccount != null ? currentAccount.getBalance() : 0;
+
+        syncAccountName();
+
+    }
+
+    private void syncAccountName() {
+        if (player instanceof ServerPlayer serverPlayer) {
+            String accountName = currentAccount != null ? currentAccount.getAccountName() : "";
+
+            PetalNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
+                    new SyncAccountNamePacket(accountName));
+        }
+    }
+
+    public void setCurrentAccountName(String accountName) {
+        this.currentAccountName = accountName;
+    }
+
+    public String getCurrentAccountName() {
+        return currentAccountName;
+    }
+
+    public int getData(int index) {
+        return data.get(index);
+    }
+
+    public int getCurrentBalance() {
+        return getData(0);
+    }
+
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+
+        if(player instanceof ServerPlayer) {
+            String accountName = currentAccount != null ? currentAccount.getAccountName() : "";
+
+            if (!accountName.equals(lastSyncedAccountName)) {
+                lastSyncedAccountName = accountName;
+                syncAccountName();
+            }
+        }
     }
 }

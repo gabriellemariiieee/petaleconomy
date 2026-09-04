@@ -3,7 +3,10 @@ package io.petaleconomy.block.entities;
 import io.petaleconomy.economy.PetalAccount;
 import io.petaleconomy.economy.PetalAccountManager;
 import io.petaleconomy.gui.APDMainMenu;
+import io.petaleconomy.gui.AbstractPetalMenu;
+import io.petaleconomy.gui.CreatePetalAccountMenu;
 import io.petaleconomy.item.PetalBill;
+import io.petaleconomy.util.Constants;
 import io.petaleconomy.util.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,23 +34,29 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements MenuProvider {
+    private AbstractPetalMenu menu;
     private final ItemStackHandler itemHandler = new ItemStackHandler(11){
         @Override
         protected void onContentsChanged(int slot) {
+
             setChanged();
+
+            if (slot == Constants.CARD_SLOT && menu != null) {
+                menu.updateCurrentAccount();
+            }
         }
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            if (slot == INPUT_SLOT) {
+            if (slot == Constants.INPUT_SLOT && menu instanceof CreatePetalAccountMenu) { //update when deposit screen is made
                 return isPetalBill(stack);
             }
 
-            if (slot == CARD_SLOT) {
+            if (slot == Constants.CARD_SLOT) {
                 return isPetalCard(stack);
             }
 
-            if (slot >= ONE_BILL_SLOT && slot <= TEN_THOUSAND_BILL_SLOT) {
+            if (slot >= Constants.ONE_BILL_SLOT && slot <= Constants.TEN_THOUSAND_BILL_SLOT) {
                 return false;
             }
 
@@ -55,12 +64,14 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
         }
     };
 
+    public boolean isPrimaryAccount;
+
     private static boolean isPetalBill(ItemStack stack) {
         return stack.is(ModTags.Items.PETAL_BILLS);
     }
 
     private static boolean isPetalCard(ItemStack stack) {
-        return false; //until created
+        return stack.is(ModTags.Items.PETAL_CARDS);
     }
 
     private static final int[] DENOMINATIONS = {
@@ -68,47 +79,22 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
     };
 
     //Deposit Menu/Screen
-    private static final int CARD_SLOT = 0;
     private static final int INPUT_SLOT = 1;
     private static final int ONE_BILL_SLOT = 2;
     private static final int TEN_THOUSAND_BILL_SLOT = 10;
-
-    private int totalDeposited = 0;
-    private int accountBalance = 0;
-    protected final ContainerData data;
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
     public AutomaticPetalDispenserBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.AUTOMATIC_PETAL_DISPENSER.get(), pos, state);
-        this.data = new ContainerData() {
-            @Override
-            public int get(int pIndex) {
-                switch (pIndex) {
-                    case 0:
-                        return totalDeposited;
-                    /*case 1:
-                        return accountBalance;*/
-                    default:
-                        return 0;
-                }
-            }
+    }
 
-            @Override
-            public void set(int pIndex, int pValue) {
-                switch (pIndex) {
-                    case 0:
-                        totalDeposited = pValue;
-                    case 1:
-                        accountBalance = pValue;
-                }
-            }
+    public IItemHandler getItemHandler(){
+        return this.itemHandler;
+    }
 
-            @Override
-            public int getCount() {
-                return 2;
-            }
-        };
+    public void setMenu(AbstractPetalMenu menu) {
+        this.menu = menu;
     }
 
     private void sortInput() {
@@ -153,17 +139,6 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
         }
 
         return total;
-    }
-
-    public int getAccountBalance(ServerPlayer player) {
-        PetalAccountManager manager = PetalAccountManager.get(player.serverLevel());
-        PetalAccount account = manager.getUsableAccount(player);
-
-        if (account == null) {
-            return 0;
-        }
-
-        return account.getBalance();
     }
 
     public boolean depositContents(ServerPlayer player) {
@@ -239,7 +214,7 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
         if (!pLevel.isClientSide() && !itemHandler.getStackInSlot(INPUT_SLOT).isEmpty()) {
             sortInput();
         }
-        totalDeposited = getTotalDeposited();
+        //totalDeposited = getTotalDeposited();
     }
 
     @Override
@@ -252,9 +227,10 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
         PetalAccountManager manager = PetalAccountManager.get((ServerLevel) player.level());
         PetalAccount account = manager.getUsableAccount((ServerPlayer) player);
         if (account == null) {
-            //return CreateAccountMenu
+            isPrimaryAccount = true;
+            return new CreatePetalAccountMenu(containerId, inv, this);
         }
-
-        return new APDMainMenu(containerId, inv, this, (IItemHandler)itemHandler, this.data); //change to APDMainMenu
+        isPrimaryAccount = false;
+        return new APDMainMenu(containerId, inv, this); //change to APDMainMenu
     }
 }

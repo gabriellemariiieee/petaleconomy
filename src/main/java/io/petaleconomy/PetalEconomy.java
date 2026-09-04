@@ -5,10 +5,13 @@ import io.petaleconomy.block.ModBlocks;
 import io.petaleconomy.block.entities.ModBlockEntities;
 import io.petaleconomy.commands.PetalEconomyCommands;
 import io.petaleconomy.events.PetalCapabilitiesEvents;
+import io.petaleconomy.gui.APDMainScreen;
+import io.petaleconomy.gui.CreatePetalAccountScreen;
 import io.petaleconomy.gui.ModMenuTypes;
 import io.petaleconomy.item.ModCreativeModTabs;
 import io.petaleconomy.item.ModItems;
 import io.petaleconomy.item.PetalCard;
+import io.petaleconomy.network.PetalNetwork;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
@@ -42,6 +45,7 @@ public class PetalEconomy {
 
         MinecraftForge.EVENT_BUS.register(PetalCapabilitiesEvents.class);
         MinecraftForge.EVENT_BUS.register(PetalEconomyCommands.class);
+        PetalNetwork.register();
 
         MinecraftForge.EVENT_BUS.register(this);
         modEventBus.addListener((this::addCreative));
@@ -64,7 +68,8 @@ public class PetalEconomy {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            //MenuScreens.register(ModMenuTypes.AUTOMATIC_PETAL_DISPENSER_MENU.get(), AutomaticPetalDispenserDepositScreen::new);
+            MenuScreens.register(ModMenuTypes.APD_MAIN_MENU.get(), APDMainScreen::new);
+            MenuScreens.register(ModMenuTypes.CREATE_PETAL_ACCOUNT_MENU.get(), CreatePetalAccountScreen::new);
         }
 
         @SubscribeEvent
