@@ -2,8 +2,10 @@ package io.petaleconomy.network;
 
 import io.petaleconomy.PetalEconomy;
 import io.petaleconomy.gui.AbstractPetalMenu;
+import io.petaleconomy.gui.CreatePetalAccountMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
@@ -18,18 +20,12 @@ public class PetalNetwork {
     private static int packetId = 0;
 
     public static void register() {
-        CHANNEL.registerMessage(packetId++, SyncAccountNamePacket.class, SyncAccountNamePacket::encode, SyncAccountNamePacket::new, (packet, context) -> {
-            context.get().enqueueWork(() -> {
-                if (context.get().getDirection().getReceptionSide().isClient()) {
-                    Minecraft minecraft = Minecraft.getInstance();
+        CHANNEL.registerMessage(packetId++, SyncAccountNamePacket.class, SyncAccountNamePacket::encode, SyncAccountNamePacket::new, SyncAccountNamePacket::handle);
 
-                    if (minecraft.player != null && minecraft.player.containerMenu instanceof AbstractPetalMenu menu) {
-                        menu.setCurrentAccountName(packet.getAccountName());
-                    }
-                }
+        CHANNEL.registerMessage(packetId++, CreateAccountPacket.class, CreateAccountPacket::encode, CreateAccountPacket::new, CreateAccountPacket::handle);
 
-                context.get().setPacketHandled(true);
-            });
-        });
+        CHANNEL.registerMessage(packetId++, EjectDepositPacket.class, EjectDepositPacket::encode, EjectDepositPacket::decode, EjectDepositPacket::handle);
+
+        CHANNEL.registerMessage(packetId++, OpenCreateMenuPacket.class, OpenCreateMenuPacket::encode, OpenCreateMenuPacket::decode, OpenCreateMenuPacket::handle);
     }
 }

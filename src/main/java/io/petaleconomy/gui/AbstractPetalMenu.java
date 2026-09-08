@@ -1,11 +1,15 @@
 package io.petaleconomy.gui;
 
 import io.petaleconomy.block.ModBlocks;
+import io.petaleconomy.block.entities.AutomaticPetalDispenserBlockEntity;
 import io.petaleconomy.economy.PetalAccount;
 import io.petaleconomy.economy.PetalAccountManager;
+import io.petaleconomy.item.ModItems;
+import io.petaleconomy.item.PetalCard;
 import io.petaleconomy.network.PetalNetwork;
 import io.petaleconomy.network.SyncAccountNamePacket;
 import io.petaleconomy.util.Constants;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -13,7 +17,10 @@ import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
+import net.minecraftforge.network.NetworkConstants;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -21,7 +28,7 @@ import javax.annotation.Nullable;
 public abstract class AbstractPetalMenu extends AbstractContainerMenu {
 
     protected final Player player;
-    protected IItemHandler itemHandler;
+    protected ItemStackHandler itemHandler;
     protected PetalAccount currentAccount;
     protected int accountBalance;
     private String currentAccountName = "";
@@ -73,13 +80,13 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         }
     }
 
-    protected void addCardSlot(IItemHandler itemHandler) {
+    protected void addCardSlot(ItemStackHandler itemHandler) {
         this.itemHandler = itemHandler;
         this.addSlot(new SlotItemHandler(itemHandler, Constants.CARD_SLOT, Constants.CARD_SLOT_X, Constants.CARD_SLOT_Y));
     }
 
     //for create account menu
-    protected void addCardSlot(IItemHandler itemHandler, int x, int y) {
+    protected void addCardSlot(ItemStackHandler itemHandler, int x, int y) {
         this.itemHandler = itemHandler;
         this.addSlot(new SlotItemHandler(itemHandler, Constants.CARD_SLOT, x, y));
     }
@@ -145,9 +152,40 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         accountBalance = currentAccount != null ? currentAccount.getBalance() : 0;
 
         syncAccountName();
-
     }
 
+    protected boolean depositContents(AutomaticPetalDispenserBlockEntity entity) {
+        if (!(player instanceof ServerPlayer player)) {
+            return false;
+        }
+        int amount = entity.getTotalDeposited();
+
+        if (amount <= 0) {
+            return false;
+        }
+
+        PetalAccountManager manager = PetalAccountManager.get(player.serverLevel());
+
+        if (currentAccount == null) {
+            return false;
+        }
+
+        manager.deposit(currentAccount.getAccountID(), amount);
+        this.accountBalance = currentAccount.getBalance();
+        entity.clearDenomSlots();
+
+        return true;
+    }
+
+    protected void bindCard(ItemStack card, PetalAccount account) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        ModItems.PETAL_CARD.get().setAccountId(card, account.getAccountID());
+        ModItems.PETAL_CARD.get().setBoundPlayerUUID(card, serverPlayer.getUUID());
+    }
+
+    //for abstract screen
     private void syncAccountName() {
         if (player instanceof ServerPlayer serverPlayer) {
             String accountName = currentAccount != null ? currentAccount.getAccountName() : "";
@@ -157,19 +195,28 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         }
     }
 
-    public void setCurrentAccountName(String accountName) {
-        this.currentAccountName = accountName;
+    public void setCurrentAccountName(String name) {
+        this.currentAccountName = name;
     }
 
-    public String getCurrentAccountName() {
-        return currentAccountName;
+    protected String getCurrentAccountName() {
+        return this.currentAccountName;
     }
 
-    public int getData(int index) {
+    public void openPetalMenu() {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+        NetworkHooks.openScreen(serverPlayer, player.level().get) {
+
+        }
+    }
+
+    private int getData(int index) {
         return data.get(index);
     }
 
-    public int getCurrentBalance() {
+    protected int getCurrentBalance() {
         return getData(0);
     }
 

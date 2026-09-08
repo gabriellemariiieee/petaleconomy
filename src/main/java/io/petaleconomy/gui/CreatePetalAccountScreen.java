@@ -1,6 +1,10 @@
 package io.petaleconomy.gui;
 
 import io.petaleconomy.PetalEconomy;
+import io.petaleconomy.network.CreateAccountPacket;
+import io.petaleconomy.network.EjectDepositPacket;
+import io.petaleconomy.network.PetalNetwork;
+import io.petaleconomy.util.Constants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -8,8 +12,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class CreatePetalAccountScreen extends AbstractPetalScreen<CreatePetalAccountMenu> {
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/create_petal_account");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/create_petal_account.png");
+
     private EditBox accountNameBox;
+    private PetalButton createButton;
 
     @Override
     protected void init() {
@@ -21,6 +27,12 @@ public class CreatePetalAccountScreen extends AbstractPetalScreen<CreatePetalAcc
         accountNameBox.setMaxLength(15);
 
         addRenderableWidget(accountNameBox);
+        addRenderableWidget(new PetalButton(leftPos + 127, topPos + 82, 42, 14, Component.literal("Create"), Constants.MENU_BUTTON_NORMAL, Constants.MENU_BUTTON_SELECTED, button -> {
+            new CreateAccountPacket(accountNameBox.getValue());
+        }));
+        addRenderableWidget(new PetalButton(leftPos + 127, topPos + 53, 42, 14, Component.literal("Eject"), Constants.MENU_BUTTON_NORMAL, Constants.MENU_BUTTON_SELECTED, button -> {
+            PetalNetwork.CHANNEL.sendToServer(new EjectDepositPacket());
+        }));
     }
 
     public CreatePetalAccountScreen(CreatePetalAccountMenu pMenu, Inventory pInv, Component pTitle) {

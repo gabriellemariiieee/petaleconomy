@@ -1,5 +1,7 @@
 package io.petaleconomy.economy;
 
+import net.minecraft.server.level.ServerPlayer;
+
 import java.util.UUID;
 
 public class PrimaryPetalAccount {
@@ -17,7 +19,7 @@ public class PrimaryPetalAccount {
         this.accountId = accountId;
     }
 
-    public boolean hasAccount() {
-        return this.accountId == null;
+    public boolean hasPrimaryAccount() {
+        return this.accountId != null;
     }
 }

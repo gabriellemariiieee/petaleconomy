@@ -15,6 +15,8 @@ public class ModMenuTypes {
 
     public static final RegistryObject<MenuType<APDMainMenu>> APD_MAIN_MENU =
             registerMenuType("apd_main_menu", APDMainMenu::new);
+    public static final RegistryObject<MenuType<PortableAPDMainMenu>> PORTABLE_APD_MAIN_MENU =
+            registerMenuType("portable_apd_main_menu", PortableAPDMainMenu::new);
     public static final RegistryObject<MenuType<CreatePetalAccountMenu>> CREATE_PETAL_ACCOUNT_MENU =
             registerMenuType("create_petal_account_menu", CreatePetalAccountMenu::new);
 

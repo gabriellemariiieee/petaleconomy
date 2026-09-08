@@ -6,10 +6,13 @@ import io.petaleconomy.economy.PetalAccountManager;
 import io.petaleconomy.economy.PrimaryPetalAccount;
 import io.petaleconomy.capabilities.PetalCapabilities;
 import io.petaleconomy.economy.PrimaryAccountProvider;
+import io.petaleconomy.item.ModItems;
+import io.petaleconomy.item.handler.PortableAPDItemHandlerProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,30 +20,15 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class PetalCapabilitiesEvents {
 
     @SubscribeEvent
-    public static void attachCapabilities(AttachCapabilitiesEvent<Entity> event) {
+    public static void attachCapabilities(AttachCapabilitiesEvent<Entity> event, AttachCapabilitiesEvent<ItemStack> itemEvent) {
         if (event.getObject() instanceof Player) {
             event.addCapability(ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "primary_account"), new PrimaryAccountProvider());
         }
-    }
 
-    //temp
-    @SubscribeEvent
-    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) {
-            return;
+        if (itemEvent.getObject().is(ModItems.PORTABLE_APD.get())) {
+            itemEvent.addCapability(ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "portable_apd_inventory"), new PortableAPDItemHandlerProvider(itemEvent.getObject()));
         }
 
-        PrimaryPetalAccount primaryAccount = player.getCapability(
-                PetalCapabilities.PRIMARY_PETAL_ACCOUNT
-        ).orElseThrow(() ->
-                new IllegalStateException("Primary account capability not found")
-        );
-
-        if (primaryAccount.getAccountId() == null) {
-            PetalAccount account = PetalAccountManager.get(player.serverLevel()).createAccount(player.getUUID());
-
-            primaryAccount.setAccountId(account.getAccountID());
-        }
     }
 
     @SubscribeEvent

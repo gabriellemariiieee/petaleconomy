@@ -8,6 +8,7 @@ import io.petaleconomy.gui.CreatePetalAccountMenu;
 import io.petaleconomy.item.PetalBill;
 import io.petaleconomy.util.Constants;
 import io.petaleconomy.util.ModTags;
+import io.petaleconomy.util.PetalItemUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -49,11 +50,11 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
             if (slot == Constants.INPUT_SLOT && menu instanceof CreatePetalAccountMenu) { //update when deposit screen is made
-                return isPetalBill(stack);
+                return PetalItemUtils.isPetalBill(stack);
             }
 
             if (slot == Constants.CARD_SLOT) {
-                return isPetalCard(stack);
+                return PetalItemUtils.isPetalCard(stack);
             }
 
             if (slot >= Constants.ONE_BILL_SLOT && slot <= Constants.TEN_THOUSAND_BILL_SLOT) {
@@ -66,30 +67,13 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
 
     public boolean isPrimaryAccount;
 
-    private static boolean isPetalBill(ItemStack stack) {
-        return stack.is(ModTags.Items.PETAL_BILLS);
-    }
-
-    private static boolean isPetalCard(ItemStack stack) {
-        return stack.is(ModTags.Items.PETAL_CARDS);
-    }
-
-    private static final int[] DENOMINATIONS = {
-            1, 5, 10, 20, 50, 100, 500, 1000, 10000
-    };
-
-    //Deposit Menu/Screen
-    private static final int INPUT_SLOT = 1;
-    private static final int ONE_BILL_SLOT = 2;
-    private static final int TEN_THOUSAND_BILL_SLOT = 10;
-
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
     public AutomaticPetalDispenserBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.AUTOMATIC_PETAL_DISPENSER.get(), pos, state);
     }
 
-    public IItemHandler getItemHandler(){
+    public ItemStackHandler getItemHandler(){
         return this.itemHandler;
     }
 
@@ -98,22 +82,23 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
     }
 
     private void sortInput() {
-        ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
+        ItemStack input = itemHandler.getStackInSlot(Constants.INPUT_SLOT);
 
         if (input.isEmpty() || !(input.getItem() instanceof PetalBill bill)) {
             return;
         }
 
+        int[] denominations = Constants.DENOMINATIONS;
         int value = bill.getValue();
-        for (int i = 0; i < DENOMINATIONS.length; i++) {
-            if (DENOMINATIONS[i] == value) {
+        for (int i = 0; i < denominations.length; i++) {
+            if (denominations[i] == value) {
                 int slot = i + 2;
 
                 ItemStack existing = itemHandler.getStackInSlot(slot);
 
                 if (existing.isEmpty()) {
                     itemHandler.setStackInSlot(slot, input.copy());
-                    itemHandler.setStackInSlot(INPUT_SLOT, ItemStack.EMPTY);
+                    itemHandler.setStackInSlot(Constants.INPUT_SLOT, ItemStack.EMPTY);
                 } else if (ItemStack.isSameItem(existing, input)) {
                     int space = existing.getMaxStackSize() - existing.getCount();
                     int amountToMove = Math.min(space, input.getCount());
@@ -122,7 +107,7 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
                     input.shrink(amountToMove);
 
                     itemHandler.setStackInSlot(slot, existing);
-                    itemHandler.setStackInSlot(INPUT_SLOT, input);
+                    itemHandler.setStackInSlot(Constants.INPUT_SLOT, input);
                 }
 
                 break;
@@ -130,41 +115,25 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
         }
     }
 
-    public int getTotalDeposited() {
-        int total = 0;
 
-        for (int i  = 0; i < DENOMINATIONS.length; i++) {
-            ItemStack stack = itemHandler.getStackInSlot(i + 2);
-            total += stack.getCount() * DENOMINATIONS[i];
-        }
-
-        return total;
-    }
-
-    public boolean depositContents(ServerPlayer player) {
-        int amount = getTotalDeposited();
-
-        if (amount <= 0) {
-            return false;
-        }
-
-        PetalAccountManager manager = PetalAccountManager.get(player.serverLevel());
-        PetalAccount account = manager.getUsableAccount(player);
-
-        if (account == null) {
-            return false;
-        }
-
-        manager.deposit(account.getAccountID(), amount);
-
+    public void clearDenomSlots() {
         //Clear denomination slots
-        for (int i = ONE_BILL_SLOT; i <= TEN_THOUSAND_BILL_SLOT; i++) {
+        for (int i = Constants.ONE_BILL_SLOT; i <= Constants.TEN_THOUSAND_BILL_SLOT; i++) {
             itemHandler.setStackInSlot(i, ItemStack.EMPTY);
         }
 
         setChanged();
+    }
 
-        return true;
+    public int getTotalDeposited() {
+        int total = 0;
+
+        for (int i  = 0; i < Constants.DENOMINATIONS.length; i++) {
+            ItemStack stack = itemHandler.getStackInSlot(i + 2);
+            total += stack.getCount() * Constants.DENOMINATIONS[i];
+        }
+
+        return total;
     }
 
     //necessary necessaries
@@ -211,7 +180,7 @@ public class AutomaticPetalDispenserBlockEntity extends BlockEntity implements M
     }
 
     public void tick(Level pLevel, BlockPos pPos, BlockState pState) {
-        if (!pLevel.isClientSide() && !itemHandler.getStackInSlot(INPUT_SLOT).isEmpty()) {
+        if (!pLevel.isClientSide() && !itemHandler.getStackInSlot(Constants.INPUT_SLOT).isEmpty()) {
             sortInput();
         }
         //totalDeposited = getTotalDeposited();

@@ -1,5 +1,7 @@
 package io.petaleconomy.util;
 
+import io.petaleconomy.PetalEconomy;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
@@ -32,5 +34,10 @@ public final class Constants {
     public static final int VANILLA_FIRST_SLOT_INDEX = 0;
     public static final int BE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
     public static final int BE_INVENTORY_SLOT_COUNT = 11;
+
+    //textures
+    public static final ResourceLocation MENU_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/menu_button.png");
+    public static final ResourceLocation MENU_BUTTON_SELECTED = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/menu_button_selected.png");
+
 
 }

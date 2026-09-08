@@ -22,6 +22,7 @@ public class ModItems {
     public static final RegistryObject<Item> ONE_THOUSAND_PETALS_BILL = ITEMS.register("one_thousand_petals_bill", () -> new PetalBill(1000));
     public static final RegistryObject<Item> TEN_THOUSAND_PETALS_BILL = ITEMS.register("ten_thousand_petals_bill", () -> new PetalBill(10000));
     public static final RegistryObject<PetalCard> PETAL_CARD = ITEMS.register("petal_card", () -> new PetalCard(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<PortableAPD> PORTABLE_APD = ITEMS.register("portable_apd", () -> new PortableAPD(new Item.Properties().stacksTo(1)));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

@@ -44,15 +44,6 @@ public class PetalAccountManager extends SavedData {
     }
 
     public PetalAccount getUsableAccount(ServerPlayer player) {
-        /*PrimaryPetalAccount petalBalance = player.getCapability(PetalCapabilities.PETAL_BALANCE).orElseThrow(() ->
-                new IllegalStateException("Petal Balance capability not found"));
-
-        UUID acountId = petalBalance.getAccountId();
-
-        if (acountId == null) {
-            return null;
-        } */
-
         //checks for usable Card
         for (ItemStack item : player.getInventory().items) {
             if (getAccountForCard(item, player) != null) {
@@ -64,10 +55,9 @@ public class PetalAccountManager extends SavedData {
         PrimaryPetalAccount primaryAccount = player.getCapability(PetalCapabilities.PRIMARY_PETAL_ACCOUNT).orElseThrow(() ->
                 new IllegalStateException("Primary Card not found"));
 
-        UUID accountID = primaryAccount.getAccountId();
-        if (!(accountID == null) && hasAccount(accountID)) {
-            return getAccount(accountID);
-        }
+        if(primaryAccount.hasPrimaryAccount()){
+            return getAccount(primaryAccount.getAccountId());
+        };
 
         return null;
     }
@@ -191,6 +181,26 @@ public class PetalAccountManager extends SavedData {
         }
 
         return isAuthorizedUser(accountId, player.getUUID());
+    }
+
+    public boolean canCreateAccountFromCard(ItemStack card, ServerPlayer player) {
+        UUID boundPlayer = ModItems.PETAL_CARD.get().getBoundPlayerUUID(card);
+        //if there's a bound player and that player isnt current player
+        if (boundPlayer != null && !boundPlayer.equals(player.getUUID())) {
+            return false;
+        }
+
+        UUID accountId = ModItems.PETAL_CARD.get().getAccountId(card);
+        //if there's an account on card and it's not deleted, if the player has access, cant override it
+        if (accountId != null && hasAccount(accountId)) {
+            PetalAccount account = getAccount(accountId);
+
+            if (account.hasAccess(player.getUUID())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     //persistence
