@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "petaleconomy:one_petal_bill",
+    "petaleconomy:five_petals_bill",
+    "petaleconomy:ten_petals_bill",
+    "petaleconomy:twenty_petals_bill",
+    "petaleconomy:fifty_petals_bill",
+    "petaleconomy:one_hundred_petals_bill",
+    "petaleconomy:five_hundred_petals_bill",
+    "petaleconomy:one_thousand_petals_bill",
+    "petaleconomy:ten_thousand_petals_bill"
+  ]
+}
