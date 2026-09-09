@@ -14,10 +14,15 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class PetalCapabilitiesEvents {
 
     @SubscribeEvent
-    public static void attachCapabilities(AttachCapabilitiesEvent<Entity> entityEvent, AttachCapabilitiesEvent<ItemStack> itemEvent) {
+    public static void attachPlayerCapabilities(AttachCapabilitiesEvent<Entity> entityEvent) {
         if (entityEvent.getObject() instanceof Player) {
             entityEvent.addCapability(ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "primary_account"), new PrimaryAccountProvider());
         }
+    }
+
+    @SubscribeEvent
+    public static void attachItemCapabilities(AttachCapabilitiesEvent<ItemStack> itemEvent) {
+
     }
 
     @SubscribeEvent

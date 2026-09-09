@@ -9,9 +9,11 @@ public final class Constants {
     public static final String ACCOUNT_OWNER = "Owner";
     public static final String BOUND_PLAYER_UUID = "BoundPlayerUUID";
     public static final String FLOWER_COLOR = "FlowerColor";
+    public static final String BASE_COLOR = "BaseColor";
     public static final String ACCOUNT_BALANCE = "Balance";
     public static final String ACCOUNT_NAME = "Name";
     public static final String PLAYERUUID = "UUID";
+
 
     //ints
     public static final int CARD_SLOT = 0;

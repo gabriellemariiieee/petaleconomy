@@ -3,5 +3,89 @@
   "textures": {
     "layer0": "petaleconomy:item/petal_card",
     "layer1": "petaleconomy:item/petal_card_flower"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "petaleconomy:base_color": 0.0001
+      },
+      "model": "petaleconomy:item/petal_card_white"
+    },
+    {
+      "predicate": {
+        "petaleconomy:base_color": 0.06666667
+      },
+      "model": "petaleconomy:item/petal_card_orange"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.13333334
+      },
+      "model": "petaleconomy:item/petal_card_magenta"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.2
+      },
+      "model": "petaleconomy:item/petal_card_light_blue"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.26666668
+      },
+      "model": "petaleconomy:item/petal_card_yellow"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.33333334
+      },
+      "model": "petaleconomy:item/petal_card_lime"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.4
+      },
+      "model": "petaleconomy:item/petal_card_pink"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.46666667
+      },
+      "model": "petaleconomy:item/petal_card_gray"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.53333336
+      },
+      "model": "petaleconomy:item/petal_card_light_gray"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.6
+      },
+      "model": "petaleconomy:item/petal_card_cyan"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.6666667
+      },
+      "model": "petaleconomy:item/petal_card_purple"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.73333335
+      },
+      "model": "petaleconomy:item/petal_card_blue"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.8
+      },
+      "model": "petaleconomy:item/petal_card_brown"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.8666667
+      },
+      "model": "petaleconomy:item/petal_card_green"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 0.93333334
+      },
+      "model": "petaleconomy:item/petal_card_red"
+    },{
+      "predicate": {
+        "petaleconomy:base_color": 1.0
+      },
+      "model": "petaleconomy:item/petal_card_black"
+    }
+  ]
 }
