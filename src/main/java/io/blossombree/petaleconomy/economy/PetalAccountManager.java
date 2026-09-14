@@ -89,7 +89,7 @@ public class PetalAccountManager extends SavedData {
     public void deposit(UUID accountId, int amount) {
         PetalAccount account = getAccount(accountId);
 
-        if (account == null || amount < 0) {
+        if (account == null || amount <= 0) {
             return;
         }
 
