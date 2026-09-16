@@ -1,4 +1,4 @@
-package io.blossombree.petaleconomy.gui;
+package io.blossombree.petaleconomy.gui.menus;
 
 import io.blossombree.petaleconomy.PetalEconomy;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -13,7 +13,9 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, PetalEconomy.MODID);
 
-    private static <T extends AbstractContainerMenu>RegistryObject<MenuType<T>> registerMenuType (String name, IContainerFactory<T> factory) {
+    public static final RegistryObject<MenuType<CreateAccountMenu>> CREATE_ACCOUNT_MENU = registerMenuType("create_account_menu", CreateAccountMenu::new);
+
+    private static <T extends AbstractContainerMenu> RegistryObject<MenuType<T>> registerMenuType (String name, IContainerFactory<T> factory) {
         return MENUS.register(name, () -> IForgeMenuType.create(factory));
     }
 

@@ -3,6 +3,7 @@ package io.blossombree.petaleconomy.block;
 import io.blossombree.petaleconomy.block.entities.APDBlockEntity;
 import io.blossombree.petaleconomy.block.entities.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -65,7 +66,16 @@ public class AutomaticPetalDispenser extends HorizontalDirectionalBlock implemen
 
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof APDBlockEntity) {
+                if (!((APDBlockEntity) blockEntity).tryClaim(player)) {
+                    return InteractionResult.PASS;
+                }
 
+                //add menu opening sequence here...
+            }
+        }
         return InteractionResult.sidedSuccess(level.isClientSide());
     }
 }

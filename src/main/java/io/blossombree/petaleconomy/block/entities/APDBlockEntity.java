@@ -22,6 +22,8 @@ import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 public class APDBlockEntity extends BlockEntity implements MenuProvider {
     private final ItemStackHandler itemHandler = new ItemStackHandler(12) {
         @Override
@@ -49,8 +51,47 @@ public class APDBlockEntity extends BlockEntity implements MenuProvider {
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
+    private UUID activePlayer;
+
     public APDBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.APD.get(), pos, state);
+    }
+
+    public ItemStackHandler getItemHandler() {
+        return this.itemHandler;
+    }
+
+    public UUID getActivePlayer() {
+        return activePlayer;
+    }
+
+    public boolean isInUse() {
+        return activePlayer != null;
+    }
+
+    public boolean isUsedBy(Player player) {
+        return player.getUUID().equals(activePlayer);
+    }
+
+    public boolean tryClaim(Player player) {
+        if (activePlayer == null || isUsedBy(player)) {
+            activePlayer = player.getUUID();
+            setChanged();
+            return true;
+        }
+
+        return false;
+    }
+
+    public void release() {
+        activePlayer = null;
+        for (int slot = Constants.ONE_BILL_SLOT;
+             slot <= Constants.TEN_THOUSAND_BILL_SLOT;
+             slot++) {
+
+            itemHandler.setStackInSlot(slot, ItemStack.EMPTY);
+        }
+        setChanged();
     }
 
     @Override

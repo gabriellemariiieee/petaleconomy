@@ -8,6 +8,8 @@ import io.blossombree.petaleconomy.item.ModItems;
 import io.blossombree.petaleconomy.item.PetalBill;
 import io.blossombree.petaleconomy.util.Constants;
 import io.blossombree.petaleconomy.util.TransactionType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -21,6 +23,7 @@ import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +41,10 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
 
     protected ContainerData data;
     protected ItemStackHandler itemHandler;
+
+    protected PetalMenuSource menuSource;
+    protected BlockPos sourcePos;
+    protected int sourceSlot = -1;
 
     protected AbstractPetalMenu(@Nullable MenuType<?> menuType, int containerId, Player player) {
         super (menuType, containerId);
@@ -96,6 +103,14 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         this.addSlot(new SlotItemHandler(itemHandler, Constants.INPUT_SLOT, x, 52));
     }
 
+    protected void readMenuSource(FriendlyByteBuf extraData) {
+        menuSource = extraData.readEnum(PetalMenuSource.class);
+        switch (menuSource) {
+            case APD -> sourcePos = extraData.readBlockPos();
+            case PORTABLE_APD -> sourceSlot = extraData.readInt();
+        }
+    }
+
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
     @Override
     public ItemStack quickMoveStack(Player pPlayer, int index) {
@@ -140,17 +155,79 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
             case 500 -> ModItems.FIVE_HUNDRED_PETALS_BILL.get();
             case 1000 -> ModItems.ONE_THOUSAND_PETALS_BILL.get();
             case 10000 -> ModItems.TEN_THOUSAND_PETALS_BILL.get();
-            default -> throw new IllegalArgumentException("Invalid Petal denominaiton: " + denomination);
+            default -> throw new IllegalArgumentException("Invalid Petal denomination: " + denomination);
         };
 
         return new ItemStack(bill, quantity);
+    }
+
+    protected void sortInput() {
+        ItemStack input = itemHandler.getStackInSlot(Constants.INPUT_SLOT);
+
+        if (input.isEmpty()) {
+            return;
+        }
+
+        int value = ((PetalBill) input.getItem()).getValue();
+
+        for (int i = 0; i < Constants.DENOMINATIONS.length; i++) {
+            if (Constants.DENOMINATIONS[i] == value) {
+                int slot = i + 2;
+                ItemStack existing = itemHandler.getStackInSlot(slot);
+
+                if (existing.isEmpty()) {
+                    itemHandler.setStackInSlot(slot, input.copy());
+                    itemHandler.setStackInSlot(Constants.INPUT_SLOT, ItemStack.EMPTY);
+                } else if (ItemStack.isSameItem(existing, input)) {
+                    int space = existing.getMaxStackSize() - existing.getCount();
+                    int amountToMove = Math.min(space, input.getCount());
+
+                    existing.grow(amountToMove);
+                    input.shrink(amountToMove);
+
+                    itemHandler.setStackInSlot(slot, existing);
+                    itemHandler.setStackInSlot(Constants.INPUT_SLOT, input);
+                }
+
+                break;
+            }
+        }
+    }
+
+    protected void updatePendingTransactionFromSlots() {
+        updatePendingAmount(getTransactionTotal());
+
+        for (int i = 0; i < Constants.DENOMINATIONS.length; i++) {
+            int denomination = Constants.DENOMINATIONS[i];
+            int slot = i + 2;
+            int quantity = itemHandler.getStackInSlot(slot).getCount();
+
+            updatePendingDenomination(denomination, quantity);
+        }
+    }
+
+    protected void clearDenomSlots() {
+        for (int i = Constants.ONE_BILL_SLOT; i <= Constants.TEN_THOUSAND_BILL_SLOT; i++) {
+            itemHandler.setStackInSlot(i, ItemStack.EMPTY);
+        }
+    }
+
+    protected int getTransactionTotal() {
+        int total = 0;
+
+        for (int i = 0; i < Constants.DENOMINATIONS.length; i++) {
+            ItemStack stack = itemHandler.getStackInSlot(i + 2);
+            total += stack.getCount() * Constants.DENOMINATIONS[i];
+        }
+
+        return total;
     }
 
     protected ItemStack getCurrentCard() {
         return itemHandler.getStackInSlot(Constants.CARD_SLOT);
     }
 
-    protected boolean isCurrentCardUsbale() {
+    protected boolean isCurrentCardUsable() {
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return false;
         }
@@ -209,6 +286,27 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
 
     protected boolean hasPendingTransaction() {
         return getPendingTransaction() != null;
+    }
+
+    protected void restorePendingTransaction() {
+        PendingTransaction pending = getPendingTransaction();
+
+        if (pending == null) {
+            return;
+        }
+
+        for (Map.Entry<Integer, Integer> entry : pending.getDenominations().entrySet()) {
+            int denomination = entry.getKey();
+            int quantity = entry.getValue();
+
+            if (quantity <= 0) {
+                continue;
+            }
+
+            ItemStack bills = createPetalBills(denomination, quantity);
+
+            itemHandler.setStackInSlot(Arrays.binarySearch(Constants.DENOMINATIONS, denomination) + 2, bills);
+        }
     }
 
     protected void clearPendingTransaction() {

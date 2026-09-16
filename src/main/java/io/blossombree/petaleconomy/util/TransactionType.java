@@ -1,7 +1,5 @@
 package io.blossombree.petaleconomy.util;
 
-import net.minecraft.util.StringRepresentable;
-
 public enum TransactionType {
     DEPOSIT("Deposit"),
     WITHDRAW("Withdraw"),
