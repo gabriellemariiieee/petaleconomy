@@ -23,8 +23,8 @@ public class PendingTransactionData extends SavedData {
         return pendingTransactions.containsKey(playerUUID);
     }
 
-    public void setPendingTransaction(UUID playerUUID, UUID accountId, TransactionType type, int amount, HashMap<Integer, Integer> denominations) {
-        pendingTransactions.put(playerUUID, new PendingTransaction(playerUUID,accountId, type, amount, denominations));
+    public void setPendingTransaction(UUID playerUUID, PendingTransaction pendingTransaction) {
+        pendingTransactions.put(playerUUID, pendingTransaction);
         setDirty();
     }
 

@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import io.blossombree.petaleconomy.block.ModBlocks;
 import io.blossombree.petaleconomy.block.entities.ModBlockEntities;
 import io.blossombree.petaleconomy.events.PetalCapabilitiesEvents;
+import io.blossombree.petaleconomy.gui.ModMenuTypes;
 import io.blossombree.petaleconomy.item.ModCreativeModTabs;
 import io.blossombree.petaleconomy.item.ModItems;
 import io.blossombree.petaleconomy.recipe.ModRecipeSerializers;
@@ -35,6 +36,7 @@ public class PetalEconomy {
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModCreativeModTabs.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
         ModRecipeSerializers.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
