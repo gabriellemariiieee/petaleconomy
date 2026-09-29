@@ -123,9 +123,11 @@ public class PetalCard extends Item {
             tooltip.add(Component.literal("VOID").withStyle(ChatFormatting.DARK_RED));
         }
 
-        PetalAccountManager manager = PetalAccountManager.get((ServerLevel) level);
-        String accountName = manager.getAccount(getAccountId(stack)).getAccountName();
-        tooltip.add(Component.literal("Account: " + accountName));
+        if (level instanceof ServerLevel serverLevel) {
+            PetalAccountManager manager = PetalAccountManager.get(serverLevel);
+            PetalAccount account = manager.getAccount(getAccountId(stack));
+            tooltip.add(Component.literal("Account: " + account.getAccountName()));
+        }
 
         CompoundTag tag = stack.getTag();
         if (tag != null && tag.contains("PlayerName")) {

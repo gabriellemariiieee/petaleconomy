@@ -1,6 +1,7 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "petaleconomy:item/petal_card_green"
+    "layer0": "petaleconomy:item/petal_card_green",
+    "layer1": "petaleconomy:item/petal_card_flower"
   }
 }

@@ -1,12 +1,22 @@
 package io.blossombree.petaleconomy.block.entities;
 
+import io.blossombree.petaleconomy.economy.PetalAccount;
+import io.blossombree.petaleconomy.economy.PetalAccountManager;
+import io.blossombree.petaleconomy.gui.menus.APDMainMenu;
+import io.blossombree.petaleconomy.gui.menus.CreateAccountMenu;
+import io.blossombree.petaleconomy.gui.menus.DepositMenu;
+import io.blossombree.petaleconomy.item.PetalCard;
 import io.blossombree.petaleconomy.util.Constants;
 import io.blossombree.petaleconomy.util.MethodUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -34,7 +44,11 @@ public class APDBlockEntity extends BlockEntity implements MenuProvider {
         @Override
         public boolean isItemValid (int slot, ItemStack stack) {
             if (slot == Constants.INPUT_SLOT) { //update when CreateAccount and Deposit menus are made
-                return MethodUtils.isPetalBill(stack);
+                return MethodUtils.isPetalBill(stack) || MethodUtils.isPetalCard(stack);
+            }
+
+            if (slot == Constants.INPUT_SLOT) {
+                return MethodUtils.isPetalCard(stack);
             }
 
             if (slot == Constants.CARD_SLOT) {
@@ -61,6 +75,21 @@ public class APDBlockEntity extends BlockEntity implements MenuProvider {
         return this.itemHandler;
     }
 
+    public void moveCard() {
+        if (!itemHandler.getStackInSlot(Constants.CARD_SLOT).isEmpty()) {
+            itemHandler.setStackInSlot(11, itemHandler.getStackInSlot(Constants.CARD_SLOT));
+            itemHandler.setStackInSlot(Constants.CARD_SLOT, ItemStack.EMPTY);
+        }
+    }
+
+    public void returnCard() {
+        if (!itemHandler.getStackInSlot(11).isEmpty()) {
+            itemHandler.setStackInSlot(Constants.CARD_SLOT, itemHandler.getStackInSlot(11));
+            itemHandler.setStackInSlot(11, ItemStack.EMPTY);
+        }
+    }
+
+
     public UUID getActivePlayer() {
         return activePlayer;
     }
@@ -85,12 +114,6 @@ public class APDBlockEntity extends BlockEntity implements MenuProvider {
 
     public void release() {
         activePlayer = null;
-        for (int slot = Constants.ONE_BILL_SLOT;
-             slot <= Constants.TEN_THOUSAND_BILL_SLOT;
-             slot++) {
-
-            itemHandler.setStackInSlot(slot, ItemStack.EMPTY);
-        }
         setChanged();
     }
 
@@ -130,13 +153,29 @@ public class APDBlockEntity extends BlockEntity implements MenuProvider {
 
     }
 
+    public void drops() {
+        SimpleContainer inventory = new SimpleContainer(itemHandler.getSlots());
+        for (int i = 0; i < this.itemHandler.getSlots(); i++) {
+            if (itemHandler.getStackInSlot(i).getItem() instanceof PetalCard) {
+                inventory.setItem(i, itemHandler.getStackInSlot(i));
+            }
+        }
+        Containers.dropContents(this.level, this.worldPosition, inventory);
+    }
+
     @Override
     public Component getDisplayName() {
-        return Component.literal("Petal Bank");
+        return Component.translatable("gui.petal_economy.petal_bank");
     }
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory inv, Player player) {
-        return null;
+        PetalAccountManager manager = PetalAccountManager.get((ServerLevel) player.level());
+        PetalAccount account = manager.getUsableAccount((ServerPlayer) player);
+
+        if (account == null) {
+            return new CreateAccountMenu(containerId, inv, this);
+        }
+        return new APDMainMenu(containerId, inv, this);
     }
 }

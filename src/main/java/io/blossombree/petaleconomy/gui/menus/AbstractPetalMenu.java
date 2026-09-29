@@ -1,11 +1,13 @@
 package io.blossombree.petaleconomy.gui.menus;
 
-import io.blossombree.petaleconomy.economy.PendingTransaction;
-import io.blossombree.petaleconomy.economy.PendingTransactionData;
-import io.blossombree.petaleconomy.economy.PetalAccount;
-import io.blossombree.petaleconomy.economy.PetalAccountManager;
+import io.blossombree.petaleconomy.block.entities.APDBlockEntity;
+import io.blossombree.petaleconomy.economy.*;
 import io.blossombree.petaleconomy.item.ModItems;
 import io.blossombree.petaleconomy.item.PetalBill;
+import io.blossombree.petaleconomy.item.PetalCard;
+import io.blossombree.petaleconomy.network.AuthorizedUsersPacket;
+import io.blossombree.petaleconomy.network.PetalNetwork;
+import io.blossombree.petaleconomy.network.SyncAccountNamePacket;
 import io.blossombree.petaleconomy.util.Constants;
 import io.blossombree.petaleconomy.util.TransactionType;
 import net.minecraft.core.BlockPos;
@@ -23,24 +25,26 @@ import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class AbstractPetalMenu extends AbstractContainerMenu {
     protected final Player player;
 
     protected PetalAccount currentAccount;
     protected int accountBalance;
+    protected int transactionAmount;
+    protected boolean accountOwner;
+    protected List<UUID> authorizedUsers;
 
     private String currentAccountName = "";
     private String lastSyncedAccountName = null;
     private PetalAccountManager manager;
     private PendingTransactionData transactionData;
-    private ItemStack card;
+    private ItemStack card = ItemStack.EMPTY;
 
     protected ContainerData data;
     protected ItemStackHandler itemHandler;
+    protected ItemStack lastInputStack = ItemStack.EMPTY;
 
     protected PetalMenuSource menuSource;
     protected BlockPos sourcePos;
@@ -55,6 +59,12 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
                 if (index == 0) {
                     return accountBalance;
                 }
+                if (index == 1) {
+                    return transactionAmount;
+                }
+                if (index == 2) {
+                    return accountOwner ? 1 : 0;
+                }
                 return 0;
             }
 
@@ -63,11 +73,17 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
                 if (index == 0) {
                     accountBalance = value;
                 }
+                if (index == 1) {
+                    transactionAmount = value;
+                }
+                if (index == 2) {
+                    accountOwner = value != 0;
+                }
             }
 
             @Override
             public int getCount() {
-                return 1;
+                return 3;
             }
         };
 
@@ -103,12 +119,56 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         this.addSlot(new SlotItemHandler(itemHandler, Constants.INPUT_SLOT, x, 52));
     }
 
+    //for deposit menu
+    protected void addInputSlot(int x, int y) {
+        this.addSlot(new SlotItemHandler(itemHandler, Constants.INPUT_SLOT, x, y));
+    }
+
     protected void readMenuSource(FriendlyByteBuf extraData) {
         menuSource = extraData.readEnum(PetalMenuSource.class);
         switch (menuSource) {
             case APD -> sourcePos = extraData.readBlockPos();
             case PORTABLE_APD -> sourceSlot = extraData.readInt();
         }
+    }
+
+    public PetalMenuSource getMenuSource() {
+        return this.menuSource;
+    }
+
+    public BlockPos getSourcePos() {
+        return this.sourcePos;
+    }
+
+    public int getSourceSlot() {
+        return this.sourceSlot;
+    }
+
+    protected void releaseMenuSource() {
+        if (menuSource == null) {
+            return;
+        }
+
+        switch (menuSource) {
+            case APD -> {
+                if (player.level().getBlockEntity(sourcePos) instanceof APDBlockEntity blockEntity) {
+                    if (blockEntity.isUsedBy(player)) {
+                        blockEntity.release();
+                    }
+                }
+            }
+            case PORTABLE_APD -> {
+
+            }
+        }
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+
+        clearDenomSlots();
+        releaseMenuSource();
     }
 
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
@@ -164,7 +224,7 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
     protected void sortInput() {
         ItemStack input = itemHandler.getStackInSlot(Constants.INPUT_SLOT);
 
-        if (input.isEmpty()) {
+        if (input.isEmpty() || input.getItem() instanceof PetalCard) {
             return;
         }
 
@@ -192,6 +252,18 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
                 break;
             }
         }
+
+        updatePendingTransactionFromSlots();
+    }
+
+    protected void clearDenomSlots() {
+        if (itemHandler == null) {
+            return;
+        }
+
+        for (int i = Constants.ONE_BILL_SLOT; i <= Constants.TEN_THOUSAND_BILL_SLOT; i++) {
+            itemHandler.setStackInSlot(i, ItemStack.EMPTY);
+        }
     }
 
     protected void updatePendingTransactionFromSlots() {
@@ -206,12 +278,6 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         }
     }
 
-    protected void clearDenomSlots() {
-        for (int i = Constants.ONE_BILL_SLOT; i <= Constants.TEN_THOUSAND_BILL_SLOT; i++) {
-            itemHandler.setStackInSlot(i, ItemStack.EMPTY);
-        }
-    }
-
     protected int getTransactionTotal() {
         int total = 0;
 
@@ -223,8 +289,13 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         return total;
     }
 
-    protected ItemStack getCurrentCard() {
-        return itemHandler.getStackInSlot(Constants.CARD_SLOT);
+    public ItemStack getCurrentCard(int slot) {
+        if (slot == 0) {
+            return itemHandler.getStackInSlot(Constants.CARD_SLOT);
+        } else if (slot == 1) {
+            return itemHandler.getStackInSlot(Constants.INPUT_SLOT);
+        }
+        return null;
     }
 
     protected boolean isCurrentCardUsable() {
@@ -232,7 +303,7 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
             return false;
         }
 
-        card = getCurrentCard();
+        card = getCurrentCard(0);
 
         if(card.isEmpty()) {
             return false;
@@ -249,12 +320,16 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
 
         manager = PetalAccountManager.get(serverPlayer.serverLevel());
 
-        card = getCurrentCard();
+        card = getCurrentCard(Constants.CARD_SLOT);
         if(!card.isEmpty()) {
             return currentAccount = manager.getAccountForCard(card, serverPlayer);
         }
 
-        return currentAccount = manager.getUseableAccount(serverPlayer);
+        if (manager.getPrimaryAccount(serverPlayer) != null) {
+            return currentAccount = manager.getPrimaryAccount(serverPlayer);
+        }
+
+        return currentAccount = null;
     }
 
     protected boolean bindCard (ItemStack card, PetalAccount account) {
@@ -272,6 +347,28 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         ModItems.PETAL_CARD.get().setBoundPlayer(card, serverPlayer.getUUID());
 
         return true;
+    }
+
+    protected boolean bindCard(ItemStack card, PetalAccount account, UUID playerUUID) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return false;
+        }
+
+        manager = PetalAccountManager.get(serverPlayer.serverLevel());
+        if (!manager.validateCard(card)) {
+            return false;
+        }
+
+        ModItems.PETAL_CARD.get().setAccountId(card, account.getAccountId());
+        ModItems.PETAL_CARD.get().setBoundPlayer(card, playerUUID);
+
+        manager.validateCard(card);
+
+        return true;
+    }
+
+    protected void setCardFlowerColor(ItemStack card, int flowerColor) {
+        ModItems.PETAL_CARD.get().setFlowerColor(card, flowerColor);
     }
 
     protected PendingTransaction getPendingTransaction() {
@@ -294,6 +391,8 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         if (pending == null) {
             return;
         }
+
+        transactionAmount = pending.getAmount();
 
         for (Map.Entry<Integer, Integer> entry : pending.getDenominations().entrySet()) {
             int denomination = entry.getKey();
@@ -337,6 +436,8 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
     protected void updatePendingAmount(int amount) {
         transactionData = PendingTransactionData.get(((ServerPlayer)player).serverLevel());
         transactionData.setAmount(((ServerPlayer) player).getUUID(), amount);
+
+        transactionAmount = amount;
     }
 
     protected void updatePendingDenomination(int denomination, int quantity) {
@@ -349,7 +450,19 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
             return;
         }
 
-        PendingTransaction transaction = getPendingTransaction();
+        for (int i = Constants.ONE_BILL_SLOT; i <= Constants.TEN_THOUSAND_BILL_SLOT; i ++) {
+            ItemStack bills = itemHandler.getStackInSlot(i);
+
+            if (!bills.isEmpty()) {
+                if (!serverPlayer.getInventory().add(bills)) {
+                    serverPlayer.drop(bills, false);
+                }
+                itemHandler.setStackInSlot(i, ItemStack.EMPTY);
+            }
+        }
+
+
+        /*PendingTransaction transaction = getPendingTransaction();
 
         if (transaction == null) {
             return;
@@ -361,7 +474,7 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
             if (!serverPlayer.getInventory().add(bills)) {
                 serverPlayer.drop(bills, false);
             }
-        }
+        }*/
     }
 
     protected void cancelPendingTransaction() {
@@ -485,8 +598,11 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
     public void updateCurrentAccount() {
         currentAccount = getCurrentAccount();
         accountBalance = currentAccount != null ? currentAccount.getBalance() : 0;
+        accountOwner = currentAccount != null && currentAccount.getOwner().equals(player.getUUID());
+        authorizedUsers = currentAccount != null ? currentAccount.getAuthorizedUsers().stream().toList() : new ArrayList<>(List.of(player.getUUID()));
 
         syncAccountName();
+        syncAuthorizedUsers();
     }
 
     private void syncAccountName() {
@@ -499,27 +615,95 @@ public abstract class AbstractPetalMenu extends AbstractContainerMenu {
         PetalNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new SyncAccountNamePacket(accountName));
     }
 
+    private void syncAuthorizedUsers() {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+
+        PetalNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new AuthorizedUsersPacket(authorizedUsers));
+    }
+
+    public List<UUID> getAuthorizedUsers() {
+        return authorizedUsers;
+    }
+
+    public void setAuthorizedUsers(List<UUID> authorizedUsers) {
+        this.authorizedUsers.clear();
+        this.authorizedUsers.addAll(authorizedUsers);
+    }
+
+    protected void syncPendingTransactionAmount() {
+        if (!(player instanceof ServerPlayer)) {
+            return;
+        }
+
+        transactionAmount = getTransactionAmount();
+    }
+
     public void setCurrentAccountName(String name) {
         this.currentAccountName = name;
     }
 
-    protected String getCurrentAccountName() {
+    public String getCurrentAccountName() {
         return this.currentAccountName;
     }
 
-    protected int getCurrentBalance() {
+    public int getCurrentBalance() {
         return data.get(0);
+    }
+
+    public int getTransactionAmount() {
+        return transactionAmount;
+    }
+
+    public int getPendingBalance() {
+        PendingTransaction pending = getPendingTransaction();
+        if (pending == null) {
+            return 0;
+        }
+
+        if (pending.getType() == TransactionType.WITHDRAW) {
+            return accountBalance - getTransactionAmount();
+        }
+        return accountBalance + getTransactionAmount();
+    }
+
+    protected void onInputChanged(ItemStack previousInput, ItemStack newInput) {
+
+    }
+
+    protected void onCardChanged(ItemStack previousCard, ItemStack newCard) {
+        updateCurrentAccount();
+    }
+
+    public boolean isAccountOwner() {
+        return accountOwner;
     }
 
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
 
+        ItemStack input = itemHandler.getStackInSlot(Constants.INPUT_SLOT);
+        if (!ItemStack.matches(input, lastInputStack)) {
+            ItemStack previousInput = lastInputStack;
+            lastInputStack = input.copy();
+            onInputChanged(previousInput, input);
+        }
+
+        ItemStack cardSlot = itemHandler.getStackInSlot(Constants.CARD_SLOT);
+        if (!ItemStack.matches(cardSlot, card)) {
+            ItemStack previousCard = card;
+            card = cardSlot.copy();
+            onCardChanged(previousCard, cardSlot);
+        }
+
         if (player instanceof ServerPlayer serverPlayer) {
             String accountName = currentAccount != null ? currentAccount.getAccountName() : "";
             if (!accountName.equals(lastSyncedAccountName)) {
                 lastSyncedAccountName = accountName;
                 syncAccountName();
+                syncAuthorizedUsers();
             }
         }
     }

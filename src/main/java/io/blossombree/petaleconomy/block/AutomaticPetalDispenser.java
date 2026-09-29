@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 public class AutomaticPetalDispenser extends HorizontalDirectionalBlock implements EntityBlock {
@@ -58,7 +59,9 @@ public class AutomaticPetalDispenser extends HorizontalDirectionalBlock implemen
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (state.getBlock() != newState.getBlock()) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
-
+            if (blockEntity instanceof APDBlockEntity apd) {
+                apd.drops();
+            }
         }
 
         super.onRemove(state, level, pos, newState, isMoving);
@@ -68,12 +71,12 @@ public class AutomaticPetalDispenser extends HorizontalDirectionalBlock implemen
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof APDBlockEntity) {
-                if (!((APDBlockEntity) blockEntity).tryClaim(player)) {
+            if (blockEntity instanceof APDBlockEntity apd) {
+                if (!(apd.tryClaim(player))) {
                     return InteractionResult.PASS;
                 }
 
-                //add menu opening sequence here...
+                NetworkHooks.openScreen(serverPlayer, apd, buf -> buf.writeBlockPos(pos));
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide());

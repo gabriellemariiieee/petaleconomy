@@ -85,7 +85,10 @@ public class PendingTransactionData extends SavedData {
             CompoundTag transactionData = (CompoundTag) transactionTag;
 
             UUID playerUUID = transactionData.getUUID(Constants.PLAYERUUID);
-            UUID accountId = transactionData.getUUID(Constants.ACCOUNT_ID);
+            UUID accountId = null;
+            if (transactionData.hasUUID(Constants.ACCOUNT_ID)) {
+                accountId = transactionData.getUUID(Constants.ACCOUNT_ID);
+            }
             TransactionType type = TransactionType.byName(transactionData.getString("TransactionType"));
             int amount = transactionData.getInt(Constants.ACCOUNT_BALANCE);
 
@@ -115,7 +118,9 @@ public class PendingTransactionData extends SavedData {
             CompoundTag transactionData = new CompoundTag();
 
             transactionData.putUUID(Constants.PLAYERUUID, pending.getPlayerUUID());
-            transactionData.putUUID(Constants.ACCOUNT_ID, pending.getAccountId());
+            if (pending.getAccountId() != null) {
+                transactionData.putUUID(Constants.ACCOUNT_ID, pending.getAccountId());
+            }
             transactionData.putString("TransactionType", pending.getType().toString());
             transactionData.putInt(Constants.ACCOUNT_BALANCE, pending.getAmount());
 

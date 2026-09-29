@@ -1,6 +1,7 @@
 package io.blossombree.petaleconomy.item;
 
 import io.blossombree.petaleconomy.PetalEconomy;
+import io.blossombree.petaleconomy.block.ModBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -26,7 +27,7 @@ public class ModCreativeModTabs {
                         pOutput.accept(ModItems.ONE_THOUSAND_PETALS_BILL.get());
                         pOutput.accept(ModItems.TEN_THOUSAND_PETALS_BILL.get());
                         pOutput.accept(ModItems.PETAL_CARD.get());
-                        //pOutput.accept(ModBlocks.AUTOMATIC_PETAL_DISPENSER.get());
+                        pOutput.accept(ModBlocks.AUTOMATIC_PETAL_DISPENSER.get());
                     }).build());
 
     public static void register(IEventBus eventBus) {

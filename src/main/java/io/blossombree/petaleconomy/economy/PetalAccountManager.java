@@ -30,9 +30,26 @@ public class PetalAccountManager extends SavedData {
         return account;
     }
 
-    public boolean deleteAccount(UUID accountId) {
+    public boolean deleteAccount(UUID accountId, ServerPlayer serverPlayer) {
         if (hasAccount(accountId)) {
-            accounts.remove(getAccount(accountId));
+            accounts.remove(accountId);
+
+            PrimaryPetalAccount primaryPetalAccount = serverPlayer.getCapability(PetalCapabilities.PRIMARY_PETAL_ACCOUNT).orElseThrow(() -> new IllegalStateException("No account found."));
+            if (accountId.equals(primaryPetalAccount.getAccountId())) {
+                for (PetalAccount account : accounts.values()) {
+                    if (isAccountOwner(account.getAccountId(), serverPlayer.getUUID())) {
+                        primaryPetalAccount.setAccountId(account.getAccountId());
+                        break;
+                    }
+                }
+            }
+
+            for (ItemStack card : getPlayerCards(serverPlayer)) {
+                if (accountId.equals(ModItems.PETAL_CARD.get().getAccountId(card))) {
+                    validateCard(card);
+                }
+            }
+
             setDirty();
 
             return true;
@@ -50,8 +67,8 @@ public class PetalAccountManager extends SavedData {
         return accounts.containsKey(accountId);
     }
 
-    public PetalAccount getUseableAccount(ServerPlayer player) {
-        //checks for useable card
+    public PetalAccount getUsableAccount(ServerPlayer player) {
+        //checks for usable card
         for (ItemStack slot : getPlayerCards(player)) {
             if (getAccountForCard(slot, player) != null) {
                 if (isCardValid(slot, player)) {
@@ -75,6 +92,15 @@ public class PetalAccountManager extends SavedData {
         }
 
         return getAccount(ModItems.PETAL_CARD.get().getAccountId(card));
+    }
+
+    public PetalAccount getPrimaryAccount(ServerPlayer player) {
+        PrimaryPetalAccount primaryPetalAccount = player.getCapability(PetalCapabilities.PRIMARY_PETAL_ACCOUNT).orElseThrow(() -> new IllegalStateException("No account found"));
+        if (primaryPetalAccount.hasPrimaryAccount()) {
+            return getAccount(primaryPetalAccount.getAccountId());
+        }
+
+        return null;
     }
 
     //account modification
@@ -103,7 +129,7 @@ public class PetalAccountManager extends SavedData {
         if (account == null) {
             throw new IllegalStateException("Account not found.");
         } else if (amount < 0) {
-            throw new IllegalStateException("Cant withdraw a negative ammount");
+            throw new IllegalStateException("Cant withdraw a negative amount");
         }
 
         if (amount > account.getBalance()) {
@@ -115,8 +141,8 @@ public class PetalAccountManager extends SavedData {
         return true;
     }
 
-    public void setBalance(UUID acountId, int amount) {
-        PetalAccount account = getAccount(acountId);
+    public void setBalance(UUID accountId, int amount) {
+        PetalAccount account = getAccount(accountId);
 
         if (account == null) {
             return;
@@ -126,7 +152,7 @@ public class PetalAccountManager extends SavedData {
         setDirty();
     }
 
-    //acount info
+    //account info
     public String getAccountName(UUID accountId) {
         if (accountId == null) {
             throw new IllegalArgumentException("Account id invalid");
@@ -161,7 +187,7 @@ public class PetalAccountManager extends SavedData {
     }
 
     //access management
-    public boolean addAuthroizedUser(UUID accountId, UUID playerUUID) {
+    public boolean addAuthorizedUser(UUID accountId, UUID playerUUID) {
         PetalAccount account = getAccount(accountId);
 
         if (account == null) {
@@ -196,7 +222,7 @@ public class PetalAccountManager extends SavedData {
     public boolean isAccountOwner(UUID accountId, UUID playerUUID) {
         PetalAccount account = getAccount(accountId);
 
-        if (account.getOwner() == playerUUID) {
+        if (account.getOwner().equals(playerUUID)) {
             return true;
         }
 

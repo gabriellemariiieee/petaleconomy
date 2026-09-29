@@ -36,9 +36,21 @@ public final class Constants {
     public static final int BE_INVENTORY_SLOT_COUNT = 11;
 
     //textures
-    public static final ResourceLocation MENU_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/menu_button.png");
-    public static final ResourceLocation MENU_BUTTON_SELECTED = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/menu_button_selected.png");
-
-
-
+    public static final ResourceLocation MENU_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/menu_button.png");
+    public static final ResourceLocation MENU_BUTTON_SELECTED = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/menu_button_selected.png");
+    public static final ResourceLocation BACK_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/back_button.png");
+    public static final ResourceLocation BACK_BUTTON_SELECTED = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/back_button_selected.png");
+    public static final ResourceLocation PLUS_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/plus.png");
+    public static final ResourceLocation PLUS_BUTTON_SELECTED = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/plus_selected.png");
+    public static final ResourceLocation MINUS_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/minus.png");
+    public static final ResourceLocation MINUS_BUTTON_SELECTED = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/minus_selected.png");
+    public static final ResourceLocation PLAYER_ENTRY_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/player_entry.png");
+    public static final ResourceLocation PLAYER_ENTRY_BUTTON_SELECTED = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/buttons/player_entry_selected.png");
+    public static final ResourceLocation APD_MAIN_MENU = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/automatic_petal_dispenser.png");
+    public static final ResourceLocation PORTABLE_APD_MAIN_MENU = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/containers/portable_apd.png");
+    public static final ResourceLocation CREATE_ACCOUNT_MENU = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/create_petal_account.png");
+    public static final ResourceLocation MANAGE_ACCESS_MENU = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/manage_account_access.png");
+    public static final ResourceLocation MANAGE_ACCOUNT_MENU = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/manage_petal_account.png");
+    public static final ResourceLocation DEPOSIT_MENU = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/petal_bank_deposit.png");
+    public static final ResourceLocation WITHDRAW_MENU = ResourceLocation.fromNamespaceAndPath(PetalEconomy.MODID, "textures/gui/petal_bank_withdraw.png");
 }
